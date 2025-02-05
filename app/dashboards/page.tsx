@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { apiKeyService } from '../services/apiKeys';
+import { apiKeyService } from '@/services/apiKeys';
 import { Sidebar } from '@/components/Sidebar';
 import { Header } from '@/components/dashboard/Header';
 import { CurrentPlan } from '@/components/dashboard/CurrentPlan';

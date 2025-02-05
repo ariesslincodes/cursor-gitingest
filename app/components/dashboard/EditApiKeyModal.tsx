@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Modal } from '@/app/components/Modal';
-import { ApiKey, apiKeyService } from '@/app/services/apiKeys';
+import { Modal } from '@/components/Modal';
+import { ApiKey, apiKeyService } from '@/services/apiKeys';
 
 interface EditApiKeyModalProps {
   isOpen: boolean;
@@ -11,7 +11,12 @@ interface EditApiKeyModalProps {
   apiKey: ApiKey | null;
 }
 
-export function EditApiKeyModal({ isOpen, onClose, onSuccess, apiKey }: EditApiKeyModalProps) {
+export function EditApiKeyModal({
+  isOpen,
+  onClose,
+  onSuccess,
+  apiKey,
+}: EditApiKeyModalProps) {
   const [name, setName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -24,7 +29,7 @@ export function EditApiKeyModal({ isOpen, onClose, onSuccess, apiKey }: EditApiK
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!apiKey) return;
-    
+
     setIsLoading(true);
     try {
       await apiKeyService.updateApiKey(apiKey.id, name);
@@ -41,7 +46,10 @@ export function EditApiKeyModal({ isOpen, onClose, onSuccess, apiKey }: EditApiK
     <Modal isOpen={isOpen} onClose={onClose} title="Edit API Key">
       <form onSubmit={handleSubmit}>
         <div className="mb-4">
-          <label htmlFor="name" className="block text-sm font-medium text-gray-300 mb-2">
+          <label
+            htmlFor="name"
+            className="block text-sm font-medium text-gray-300 mb-2"
+          >
             Name
           </label>
           <input
@@ -73,4 +81,4 @@ export function EditApiKeyModal({ isOpen, onClose, onSuccess, apiKey }: EditApiK
       </form>
     </Modal>
   );
-} 
+}

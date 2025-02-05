@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ApiKey, apiKeyService } from '@/app/services/apiKeys';
+import { ApiKey, apiKeyService } from '@/services/apiKeys';
 import {
   EyeIcon,
   EyeSlashIcon,
@@ -9,7 +9,7 @@ import {
   PencilIcon,
   TrashIcon,
 } from '@heroicons/react/24/outline';
-import { showToast } from '@/app/components/ToastContainer';
+import { showToast } from '@/components/ToastContainer';
 import { CreateApiKeyModal } from './CreateApiKeyModal';
 import { EditApiKeyModal } from './EditApiKeyModal';
 

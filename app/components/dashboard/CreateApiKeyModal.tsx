@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { apiKeyService } from '@/app/services/apiKeys';
-import { showToast } from '@/app/components/ToastContainer';
+import { apiKeyService } from '@/services/apiKeys';
+import { showToast } from '@/components/ToastContainer';
 
 interface CreateApiKeyModalProps {
   onClose: () => void;
