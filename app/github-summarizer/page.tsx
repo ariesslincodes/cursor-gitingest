@@ -77,24 +77,6 @@ export default function GitHubSummarizerPage() {
         <form onSubmit={handleSubmit} className="max-w-md">
           <div className="mb-4">
             <label
-              htmlFor="apiKey"
-              className="block text-sm font-medium text-gray-300 mb-2"
-            >
-              API Key
-            </label>
-            <input
-              type="text"
-              id="apiKey"
-              value={apiKey}
-              onChange={(e) => setApiKey(e.target.value)}
-              className="w-full bg-[#2A2A2A] border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Enter your API key"
-              required
-            />
-          </div>
-
-          <div className="mb-4">
-            <label
               htmlFor="githubUrl"
               className="block text-sm font-medium text-gray-300 mb-2"
             >
