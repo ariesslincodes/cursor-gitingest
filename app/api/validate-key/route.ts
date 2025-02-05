@@ -1,4 +1,4 @@
-import { apiKeyService } from '@/app/services/apiKeys';
+import { apiKeyService } from '@/services/apiKeys';
 import { NextResponse } from 'next/server';
 
 export async function POST(request: Request) {
@@ -39,14 +39,11 @@ export async function POST(request: Request) {
 
     // Check if the API key exists in your database
     const isValid = await apiKeyService.validateApiKey(apiKey);
-    
+
     if (isValid) {
       return NextResponse.json({ valid: true });
     } else {
-      return NextResponse.json(
-        { error: 'Invalid API key' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Invalid API key' }, { status: 401 });
     }
   } catch (error) {
     // Only use 500 for actual server errors
@@ -56,4 +53,4 @@ export async function POST(request: Request) {
       { status: 500 }
     );
   }
-} 
+}
