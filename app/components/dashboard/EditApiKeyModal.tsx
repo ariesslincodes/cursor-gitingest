@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Modal } from '@/app/components/Modal';
 import { ApiKey, apiKeyService } from '@/app/services/apiKeys';
+import { showToast } from '@/app/components/ToastContainer';
 
 interface EditApiKeyModalProps {
   isOpen: boolean;
@@ -35,8 +36,10 @@ export function EditApiKeyModal({
       await apiKeyService.updateApiKey(apiKey.id, name);
       onSuccess();
       onClose();
+      showToast('API key updated successfully', 'success');
     } catch (err) {
       console.error('Failed to update API key:', err);
+      showToast('Failed to update API key', 'error');
     } finally {
       setIsLoading(false);
     }
