@@ -1,8 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ApiKey, apiKeyService } from '@/app/services/apiKeys';
-import { EyeIcon, EyeSlashIcon, ClipboardIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
+import {
+  EyeIcon,
+  EyeSlashIcon,
+  ClipboardIcon,
+  PencilIcon,
+  TrashIcon,
+} from '@heroicons/react/24/outline';
 import { showToast } from '@/app/components/ToastContainer';
 import { CreateApiKeyModal } from './CreateApiKeyModal';
 import { EditApiKeyModal } from './EditApiKeyModal';
@@ -17,6 +23,34 @@ export function ApiKeyList({ apiKeys, onUpdate }: ApiKeyListProps) {
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingKey, setEditingKey] = useState<ApiKey | null>(null);
   const [visibleKeyIds, setVisibleKeyIds] = useState<Set<string>>(new Set());
+  const [isLoading, setIsLoading] = useState(true);
+
+  const fetchApiKeys = async () => {
+    try {
+      const keys = await apiKeyService.fetchApiKeys();
+      setApiKeys(keys);
+    } catch (error) {
+      console.error('Failed to fetch API keys:', error);
+      showToast('Failed to load API keys', 'error');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchApiKeys();
+  }, []);
+
+  const handleDelete = async (id: string) => {
+    try {
+      await apiKeyService.deleteApiKey(id);
+      await fetchApiKeys();
+      showToast('API key deleted successfully', 'success');
+    } catch (error) {
+      console.error('Failed to delete API key:', error);
+      showToast('Failed to delete API key', 'error');
+    }
+  };
 
   const toggleKeyVisibility = (id: string) => {
     const newVisibleKeys = new Set(visibleKeyIds);
@@ -41,12 +75,16 @@ export function ApiKeyList({ apiKeys, onUpdate }: ApiKeyListProps) {
     return key.slice(0, 3) + '•'.repeat(37);
   };
 
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
   return (
     <>
       <div className="bg-[#1A1A1A] rounded-xl border border-gray-800">
         <div className="flex justify-between items-center p-6 border-b border-gray-800">
           <h2 className="text-xl font-semibold text-white">API Keys</h2>
-          <button 
+          <button
             onClick={() => setShowCreateModal(true)}
             className="px-4 py-2 bg-white text-black rounded-lg hover:bg-gray-200 disabled:bg-gray-600 disabled:text-gray-400 disabled:cursor-not-allowed text-sm font-medium transition-colors"
           >
@@ -65,7 +103,10 @@ export function ApiKeyList({ apiKeys, onUpdate }: ApiKeyListProps) {
 
           {/* API Keys */}
           {apiKeys.map((key) => (
-            <div key={key.id} className="grid grid-cols-12 gap-4 px-6 py-4 items-center">
+            <div
+              key={key.id}
+              className="grid grid-cols-12 gap-4 px-6 py-4 items-center"
+            >
               <div className="col-span-3">
                 <span className="font-medium text-white">{key.name}</span>
               </div>
@@ -81,7 +122,9 @@ export function ApiKeyList({ apiKeys, onUpdate }: ApiKeyListProps) {
                 <button
                   onClick={() => toggleKeyVisibility(key.id)}
                   className="p-1.5 hover:bg-[#2A2A2A] rounded-lg transition-colors"
-                  title={visibleKeyIds.has(key.id) ? "Hide API key" : "Show API key"}
+                  title={
+                    visibleKeyIds.has(key.id) ? 'Hide API key' : 'Show API key'
+                  }
                 >
                   {visibleKeyIds.has(key.id) ? (
                     <EyeSlashIcon className="w-5 h-5 text-gray-400 hover:text-white" />
@@ -107,12 +150,7 @@ export function ApiKeyList({ apiKeys, onUpdate }: ApiKeyListProps) {
                   <PencilIcon className="w-5 h-5" />
                 </button>
                 <button
-                  onClick={async () => {
-                    if (confirm('Are you sure you want to delete this API key?')) {
-                      await apiKeyService.deleteApiKey(key.id);
-                      onUpdate();
-                    }
-                  }}
+                  onClick={() => handleDelete(key.id)}
                   className="p-1.5 text-gray-400 hover:text-white hover:bg-[#2A2A2A] rounded-lg transition-colors"
                   title="Delete"
                 >
@@ -124,11 +162,12 @@ export function ApiKeyList({ apiKeys, onUpdate }: ApiKeyListProps) {
         </div>
       </div>
 
-      <CreateApiKeyModal 
-        isOpen={showCreateModal}
-        onClose={() => setShowCreateModal(false)}
-        onSuccess={onUpdate}
-      />
+      {showCreateModal && (
+        <CreateApiKeyModal
+          onClose={() => setShowCreateModal(false)}
+          onKeyCreated={fetchApiKeys}
+        />
+      )}
 
       <EditApiKeyModal
         isOpen={showEditModal}
@@ -138,4 +177,4 @@ export function ApiKeyList({ apiKeys, onUpdate }: ApiKeyListProps) {
       />
     </>
   );
-} 
+}
