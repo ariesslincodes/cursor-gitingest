@@ -7,16 +7,4 @@ if (!supabaseUrl || !supabaseKey) {
   throw new Error('Missing Supabase environment variables');
 }
 
-export const supabase = createClient(supabaseUrl, supabaseKey);
-
-// Test the connection
-supabase
-  .from('api_keys')
-  .select('count')
-  .then(({ data, error }) => {
-    if (error) {
-      console.error('Supabase connection error:', error);
-    } else {
-      console.log('Supabase connected successfully');
-    }
-  }); 
+export const supabase = createClient(supabaseUrl, supabaseKey); 
