@@ -1,5 +1,5 @@
 import { apiKeyService } from '@/app/services/apiKeys';
-import { createRepositorySummary } from '@/app/services/chain';
+import { createGitHubSummaryChain } from '@/app/services/chain';
 import { NextResponse } from 'next/server';
 
 // Helper function to extract repository info from GitHub URL
@@ -123,11 +123,9 @@ export async function POST(request: Request) {
     const repoData = await response.json();
 
     try {
-      const result = await createRepositorySummary(
-        repoData,
-        repoInfo.readmeContent
-      );
-      return NextResponse.json(result);
+      const chain = await createGitHubSummaryChain();
+      const summary = await chain(repoData);
+      return NextResponse.json(summary);
     } catch (chainError: Error | unknown) {
       if (chainError instanceof Error) {
         if (
