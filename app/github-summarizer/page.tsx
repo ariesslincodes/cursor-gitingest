@@ -2,9 +2,11 @@
 
 import { useState } from 'react';
 import { showToast } from '@/app/components/ToastContainer';
+import { useAuth } from '@/app/hooks/useAuth';
 
 interface SummaryResponse {
   summary: string;
+  cool_facts: string[];
   repository: {
     name: string;
     description: string;
@@ -18,7 +20,7 @@ interface SummaryResponse {
 
 export default function GitHubSummarizerPage() {
   const [githubUrl, setGithubUrl] = useState('');
-  const [apiKey, setApiKey] = useState('');
+  const { user, apiKey } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [summary, setSummary] = useState<SummaryResponse | null>(null);
 
@@ -32,7 +34,7 @@ export default function GitHubSummarizerPage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-API-KEY': apiKey
+          Authorization: `Bearer ${apiKey}`,
         },
         body: JSON.stringify({ githubUrl }),
       });
@@ -53,6 +55,10 @@ export default function GitHubSummarizerPage() {
     }
   };
 
+  if (!user) {
+    return <div>Please sign in to use this feature</div>;
+  }
+
   return (
     <div className="flex-1 p-8 max-w-6xl">
       <div className="mb-8">
@@ -65,10 +71,15 @@ export default function GitHubSummarizerPage() {
       </div>
 
       <div className="bg-[#1A1A1A] rounded-xl border border-gray-800 p-6 mb-6">
-        <h2 className="text-xl font-semibold text-white mb-4">Generate Repository Summary</h2>
+        <h2 className="text-xl font-semibold text-white mb-4">
+          Generate Repository Summary
+        </h2>
         <form onSubmit={handleSubmit} className="max-w-md">
           <div className="mb-4">
-            <label htmlFor="apiKey" className="block text-sm font-medium text-gray-300 mb-2">
+            <label
+              htmlFor="apiKey"
+              className="block text-sm font-medium text-gray-300 mb-2"
+            >
               API Key
             </label>
             <input
@@ -83,7 +94,10 @@ export default function GitHubSummarizerPage() {
           </div>
 
           <div className="mb-4">
-            <label htmlFor="githubUrl" className="block text-sm font-medium text-gray-300 mb-2">
+            <label
+              htmlFor="githubUrl"
+              className="block text-sm font-medium text-gray-300 mb-2"
+            >
               GitHub Repository URL
             </label>
             <input
@@ -107,37 +121,59 @@ export default function GitHubSummarizerPage() {
         </form>
       </div>
 
+      {isLoading && (
+        <div className="text-center py-8">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto"></div>
+          <p className="mt-4 text-gray-400">Generating summary...</p>
+        </div>
+      )}
+
       {summary && (
         <div className="bg-[#1A1A1A] rounded-xl border border-gray-800 p-6">
-          <h2 className="text-xl font-semibold text-white mb-4">Repository Summary</h2>
-          
           <div className="mb-6">
-            <h3 className="text-lg font-medium text-white mb-2">
-              <a href={summary.repository.url} target="_blank" rel="noopener noreferrer" className="hover:underline">
+            <h3 className="text-lg font-semibold text-white mb-2">
+              Repository Info
+            </h3>
+            <div className="flex items-center gap-4 text-sm text-gray-300">
+              <a
+                href={summary.repository.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-400 hover:underline"
+              >
                 {summary.repository.name}
               </a>
-            </h3>
-            <div className="flex gap-4 text-sm text-gray-400 mb-4">
               <span>⭐ {summary.repository.stars}</span>
-              <span>🔤 {summary.repository.language}</span>
-              <span>🕒 Last updated: {new Date(summary.repository.lastUpdated).toLocaleDateString()}</span>
+              {summary.repository.language && (
+                <span>{summary.repository.language}</span>
+              )}
             </div>
-            {summary.repository.topics.length > 0 && (
-              <div className="flex flex-wrap gap-2 mb-4">
-                {summary.repository.topics.map(topic => (
-                  <span key={topic} className="px-2 py-1 bg-[#2A2A2A] rounded-full text-xs text-gray-300">
-                    {topic}
-                  </span>
-                ))}
-              </div>
-            )}
           </div>
 
-          <div className="prose prose-invert max-w-none">
-            <div className="text-gray-300 whitespace-pre-wrap">{summary.summary}</div>
+          <div className="mb-6">
+            <h3 className="text-lg font-semibold text-white mb-2">Summary</h3>
+            <p className="text-gray-300">{summary.summary}</p>
+          </div>
+
+          {summary.cool_facts && summary.cool_facts.length > 0 && (
+            <div>
+              <h3 className="text-lg font-semibold text-white mb-2">
+                Key Findings
+              </h3>
+              <ul className="list-disc list-inside space-y-2 text-gray-300">
+                {summary.cool_facts.map((fact, index) => (
+                  <li key={index}>{fact}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          <div className="mt-4 text-sm text-gray-400">
+            Last updated:{' '}
+            {new Date(summary.repository.lastUpdated).toLocaleDateString()}
           </div>
         </div>
       )}
     </div>
   );
-} 
+}

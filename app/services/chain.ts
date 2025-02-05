@@ -1,13 +1,21 @@
-import { ChatOpenAI } from "@langchain/openai";
-import { PromptTemplate } from "@langchain/core/prompts";
-import { StructuredOutputParser } from "langchain/output_parsers";
-import { RunnableSequence } from "@langchain/core/runnables";
-import { z } from "zod";
+import { ChatOpenAI } from '@langchain/openai';
+import { PromptTemplate } from '@langchain/core/prompts';
+import { StructuredOutputParser } from 'langchain/output_parsers';
+import { RunnableSequence } from '@langchain/core/runnables';
+import { z } from 'zod';
 
 // Define schema for repository summary
 export const repositorySchema = z.object({
-  summary: z.string().min(1).max(1000).describe("A concise summary of the repository"),
-  cool_facts: z.array(z.string()).min(1).max(10).describe("A list of interesting facts about the repository"),
+  summary: z
+    .string()
+    .min(1)
+    .max(1000)
+    .describe('A concise summary of the repository'),
+  cool_facts: z
+    .array(z.string())
+    .min(1)
+    .max(10)
+    .describe('A list of interesting facts about the repository'),
   repository: z.object({
     name: z.string(),
     description: z.string().nullable(),
@@ -15,8 +23,8 @@ export const repositorySchema = z.object({
     stars: z.number(),
     language: z.string().nullable(),
     topics: z.array(z.string()),
-    lastUpdated: z.string()
-  })
+    lastUpdated: z.string(),
+  }),
 });
 
 export type RepositorySummary = z.infer<typeof repositorySchema>;
@@ -47,44 +55,41 @@ function parseAIResponse(text: string) {
     const parsed = JSON.parse(cleanedText);
     return {
       summary: parsed.summary,
-      cool_facts: parsed.cool_facts || []
+      cool_facts: parsed.cool_facts || [],
     };
   } catch (error) {
     console.error('First parse attempt failed:', error);
-    
+
     try {
       // If that fails, try to parse the text directly
       const parsed = JSON.parse(text);
       return {
         summary: parsed.summary,
-        cool_facts: parsed.cool_facts || []
+        cool_facts: parsed.cool_facts || [],
       };
     } catch (error) {
       console.error('Second parse attempt failed:', error);
-      
+
       // If all parsing fails, return a simplified response
       return {
         summary: text,
-        cool_facts: []
+        cool_facts: [],
       };
     }
   }
 }
 
-export async function createRepositorySummary(repoData: RepoData, readmeContent: string) {
-  // Debug OpenAI API key
+export async function createRepositorySummary(
+  repoData: RepoData,
+  readmeContent: string
+) {
   if (!process.env.OPENAI_API_KEY) {
     throw new Error('OpenAI API key is not configured');
   }
-  
-  console.log('OpenAI API Key exists:', !!process.env.OPENAI_API_KEY);
-  console.log('OpenAI API Key length:', process.env.OPENAI_API_KEY.length);
-  console.log('OpenAI API Key prefix:', process.env.OPENAI_API_KEY.substring(0, 7));
 
-  // Initialize LangChain with GPT-3.5-turbo instead of GPT-4
   const chatModel = new ChatOpenAI({
     openAIApiKey: process.env.OPENAI_API_KEY,
-    modelName: "gpt-3.5-turbo",
+    modelName: 'gpt-3.5-turbo',
     temperature: 0.7,
     maxRetries: 3,
   });
@@ -116,8 +121,8 @@ export async function createRepositorySummary(repoData: RepoData, readmeContent:
 
     // Create output parser to structure the response
     const outputParser = StructuredOutputParser.fromNamesAndDescriptions({
-      summary: "A concise summary of the repository",
-      cool_facts: "A list of interesting facts about the repository"
+      summary: 'A concise summary of the repository',
+      cool_facts: 'A list of interesting facts about the repository',
     });
 
     // Create formatting function
@@ -125,9 +130,9 @@ export async function createRepositorySummary(repoData: RepoData, readmeContent:
 
     // Create the full prompt with formatting instructions
     const fullPrompt = new PromptTemplate({
-      template: "Instructions: {format_instructions}\n{initial_prompt}",
-      inputVariables: ["initial_prompt"],
-      partialVariables: { format_instructions: formatInstructions }
+      template: 'Instructions: {format_instructions}\n{initial_prompt}',
+      inputVariables: ['initial_prompt'],
+      partialVariables: { format_instructions: formatInstructions },
     });
 
     // Create the chain
@@ -141,10 +146,10 @@ export async function createRepositorySummary(repoData: RepoData, readmeContent:
             language: repoData.language,
             topics: repoData.topics?.join(', ') || 'None',
             lastUpdated: repoData.updated_at,
-            readme_content: readmeContent
+            readme_content: readmeContent,
           });
           return res;
-        }
+        },
       },
       fullPrompt,
       chatModel,
@@ -152,9 +157,9 @@ export async function createRepositorySummary(repoData: RepoData, readmeContent:
         const parsed = parseAIResponse(response.content);
         return {
           summary: parsed.summary.replace(/```json|```/g, '').trim(),
-          cool_facts: parsed.cool_facts
+          cool_facts: parsed.cool_facts,
         };
-      }
+      },
     ]);
 
     // Run the chain with error handling
@@ -172,23 +177,19 @@ export async function createRepositorySummary(repoData: RepoData, readmeContent:
         stars: repoData.stargazers_count,
         language: repoData.language,
         topics: repoData.topics,
-        lastUpdated: repoData.updated_at
-      }
+        lastUpdated: repoData.updated_at,
+      },
     };
   } catch (error: Error | unknown) {
-    console.error('Error in createRepositorySummary:', error);
-    
     if (error instanceof Error) {
-      // Handle specific error types
       if (error.message?.includes('exceeded your current quota')) {
         throw new Error('API rate limit exceeded. Please try again later.');
       }
-      
+
       if (error.message?.includes('invalid_api_key')) {
         throw new Error('Invalid API configuration. Please contact support.');
       }
     }
-    
     throw error;
   }
-} 
+}

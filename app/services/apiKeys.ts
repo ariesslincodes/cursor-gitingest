@@ -1,4 +1,9 @@
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@supabase/supabase-js';
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
 export interface ApiKey {
   id: string;
@@ -20,15 +25,14 @@ export const apiKeyService = {
     return data;
   },
 
-  async createApiKey(newKey: Omit<ApiKey, 'id' | 'created_at'>) {
-    const { data, error } = await supabase
+  async createApiKey(userId: string): Promise<string> {
+    const key = `sk_${crypto.randomUUID()}`;
+    const { error } = await supabase
       .from('api_keys')
-      .insert([newKey])
-      .select()
-      .single();
+      .insert([{ user_id: userId, key: key }]);
 
     if (error) throw error;
-    return data;
+    return key;
   },
 
   async updateApiKey(id: string, name: string) {
@@ -41,32 +45,19 @@ export const apiKeyService = {
   },
 
   async deleteApiKey(id: string) {
-    const { error } = await supabase
-      .from('api_keys')
-      .delete()
-      .eq('id', id);
+    const { error } = await supabase.from('api_keys').delete().eq('id', id);
 
     if (error) throw error;
   },
 
   async validateApiKey(key: string): Promise<boolean> {
-    try {
-      const { data: apiKeys, error } = await supabase
-        .from('api_keys')
-        .select('*')
-        .eq('key', key)
-        .single();
-      
-      if (error) {
-        console.error('Supabase error:', error);
-        return false;
-      }
+    const { data, error } = await supabase
+      .from('api_keys')
+      .select('*')
+      .eq('key', key)
+      .single();
 
-      console.log('Found API key:', apiKeys);
-      return !!apiKeys;
-    } catch (error) {
-      console.error('Error validating API key:', error);
-      return false;
-    }
+    if (error) return false;
+    return !!data;
   },
-}; 
+};
