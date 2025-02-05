@@ -44,7 +44,7 @@ export function ApiKeyList({ apiKeys, onUpdate }: ApiKeyListProps) {
   const handleDelete = async (id: string) => {
     try {
       await apiKeyService.deleteApiKey(id);
-      await fetchApiKeys();
+      onUpdate();
       showToast('API key deleted successfully', 'success');
     } catch (error) {
       console.error('Failed to delete API key:', error);
@@ -165,7 +165,7 @@ export function ApiKeyList({ apiKeys, onUpdate }: ApiKeyListProps) {
       {showCreateModal && (
         <CreateApiKeyModal
           onClose={() => setShowCreateModal(false)}
-          onKeyCreated={fetchApiKeys}
+          onKeyCreated={onUpdate}
         />
       )}
 
