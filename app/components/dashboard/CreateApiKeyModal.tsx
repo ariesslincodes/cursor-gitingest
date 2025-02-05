@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useAuth } from '@/app/hooks/useAuth';
 import { apiKeyService } from '@/app/services/apiKeys';
 import { showToast } from '@/app/components/ToastContainer';
 
@@ -16,17 +15,13 @@ export function CreateApiKeyModal({
 }: CreateApiKeyModalProps) {
   const [name, setName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { user } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    try {
-      if (!user?.id) {
-        throw new Error('User not authenticated');
-      }
 
-      const newKey = await apiKeyService.createApiKey(user.id);
+    try {
+      const newKey = await apiKeyService.createApiKey(name);
       showToast(
         'API key created successfully. Your key is: ' + newKey,
         'success'

@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 
+// Single instance of Supabase client
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -25,11 +26,16 @@ export const apiKeyService = {
     return data;
   },
 
-  async createApiKey(userId: string): Promise<string> {
+  async createApiKey(name: string = 'API Key'): Promise<string> {
     const key = `sk_${crypto.randomUUID()}`;
-    const { error } = await supabase
-      .from('api_keys')
-      .insert([{ user_id: userId, key: key }]);
+    const { error } = await supabase.from('api_keys').insert([
+      {
+        key: key,
+        name: name,
+        usage: 0,
+        monthly_limit: 1000, // Optional: set a default limit
+      },
+    ]);
 
     if (error) throw error;
     return key;
