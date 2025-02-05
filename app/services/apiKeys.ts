@@ -51,12 +51,18 @@ export const apiKeyService = {
 
   async validateApiKey(key: string): Promise<boolean> {
     try {
-      const { data: apiKeys } = await supabase
+      const { data: apiKeys, error } = await supabase
         .from('api_keys')
         .select('*')
         .eq('key', key)
         .single();
       
+      if (error) {
+        console.error('Supabase error:', error);
+        return false;
+      }
+
+      console.log('Found API key:', apiKeys);
       return !!apiKeys;
     } catch (error) {
       console.error('Error validating API key:', error);

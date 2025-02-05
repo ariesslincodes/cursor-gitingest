@@ -9,8 +9,15 @@ export async function POST(request: Request) {
     const contentType = request.headers.get('content-type');
     if (contentType?.includes('application/json')) {
       // Web request with JSON body
-      const body = await request.json();
-      apiKey = body.apiKey;
+      try {
+        const body = await request.json();
+        apiKey = body.apiKey;
+      } catch (jsonError) {
+        return NextResponse.json(
+          { error: 'Invalid JSON format. The request body must be valid JSON with an "apiKey" field' },
+          { status: 400 }
+        );
+      }
     } else {
       // API request with Authorization header
       const authHeader = request.headers.get('authorization');
@@ -42,9 +49,10 @@ export async function POST(request: Request) {
       );
     }
   } catch (error) {
-    console.error('Error validating API key:', error);
+    // Only use 500 for actual server errors
+    console.error('Server error:', error);
     return NextResponse.json(
-      { error: 'Failed to validate API key' },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }
