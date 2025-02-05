@@ -1,11 +1,8 @@
 import { apiKeyService } from '@/app/services/apiKeys';
 import { NextResponse } from 'next/server';
-import { headers } from 'next/headers';
 
 export async function POST(request: Request) {
   try {
-    // Get the API key from either the request body or Authorization header
-    const headersList = headers();
     let apiKey: string;
 
     // Check if it's a JSON request (from web) or API request (from Postman)
