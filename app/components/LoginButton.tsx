@@ -3,8 +3,9 @@
 import { signIn, signOut, useSession } from 'next-auth/react';
 import { useSearchParams } from 'next/navigation';
 import Image from 'next/image';
+import { Suspense } from 'react';
 
-export function LoginButton() {
+function LoginButtonContent() {
   const { data: session, status } = useSession();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get('callbackUrl') || '/';
@@ -66,5 +67,19 @@ export function LoginButton() {
       </svg>
       Sign in with Google
     </button>
+  );
+}
+
+export function LoginButton() {
+  return (
+    <Suspense
+      fallback={
+        <button disabled className="px-4 py-2 bg-gray-200 rounded-lg">
+          Loading...
+        </button>
+      }
+    >
+      <LoginButtonContent />
+    </Suspense>
   );
 }
