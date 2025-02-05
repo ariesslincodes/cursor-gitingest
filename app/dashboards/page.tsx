@@ -2,19 +2,16 @@
 
 import { useState, useEffect } from 'react';
 import { apiKeyService, type ApiKey } from '@/app/services/apiKeys';
-import { Toast } from '@/app/components/Toast';
 import { Sidebar } from '@/app/components/Sidebar';
 import { Header } from '@/app/components/dashboard/Header';
 import { CurrentPlan } from '@/app/components/dashboard/CurrentPlan';
 import { ApiKeyList } from '@/app/components/dashboard/ApiKeyList';
-import { showToast } from '@/app/components/ToastContainer';
 
 export default function DashboardPage() {
   const [apiKeys, setApiKeys] = useState<ApiKey[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isClient, setIsClient] = useState(false);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSidebarOpen] = useState(true);
 
   const fetchApiKeys = async () => {
     try {
@@ -30,15 +27,6 @@ export default function DashboardPage() {
     fetchApiKeys();
     setIsClient(true);
   }, []);
-
-  const copyToClipboard = async (key: string) => {
-    try {
-      await navigator.clipboard.writeText(key);
-      showToast('Copied API Key to clipboard');
-    } catch (err) {
-      console.error('Failed to copy to clipboard:', err);
-    }
-  };
 
   if (!isClient) {
     return (
