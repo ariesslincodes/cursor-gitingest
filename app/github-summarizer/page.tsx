@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { Header } from '../components/dashboard/Header';
-import { showToast } from '@/app/components/ToastContainer';
+import { Header } from '@/components/dashboard/Header';
+import { showToast } from '@/components/ToastContainer';
 import Link from 'next/link';
 
 interface SummaryResponse {
