@@ -1,72 +1,88 @@
 'use client';
 
 import { useState } from 'react';
-import { Modal } from '@/app/components/Modal';
+import { useAuth } from '@/app/hooks/useAuth';
 import { apiKeyService } from '@/app/services/apiKeys';
+import { showToast } from '@/app/components/ToastContainer';
 
 interface CreateApiKeyModalProps {
-  isOpen: boolean;
   onClose: () => void;
-  onSuccess: () => void;
+  onKeyCreated: () => void;
 }
 
-export function CreateApiKeyModal({ isOpen, onClose, onSuccess }: CreateApiKeyModalProps) {
+export function CreateApiKeyModal({
+  onClose,
+  onKeyCreated,
+}: CreateApiKeyModalProps) {
   const [name, setName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const { user } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     try {
-      await apiKeyService.createApiKey({
-        name,
-        key: `myo${Math.random().toString(36).slice(2)}`,
-        usage: 0
-      });
-      onSuccess();
+      if (!user?.id) {
+        throw new Error('User not authenticated');
+      }
+
+      const newKey = await apiKeyService.createApiKey(user.id);
+      showToast(
+        'API key created successfully. Your key is: ' + newKey,
+        'success'
+      );
+      onKeyCreated();
       onClose();
-      setName('');
-    } catch (err) {
-      console.error('Failed to create API key:', err);
+    } catch (error) {
+      console.error('Error creating API key:', error);
+      showToast('Failed to create API key', 'error');
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Create New API Key">
-      <form onSubmit={handleSubmit}>
-        <div className="mb-4">
-          <label htmlFor="name" className="block text-sm font-medium text-gray-300 mb-2">
-            Name
-          </label>
-          <input
-            type="text"
-            id="name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="w-full bg-[#2A2A2A] border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="Enter key name"
-            required
-          />
-        </div>
-        <div className="flex justify-end gap-3">
-          <button
-            type="button"
-            onClick={onClose}
-            className="px-4 py-2 text-gray-300 hover:text-white transition-colors"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="px-4 py-2 bg-white text-black rounded-lg hover:bg-gray-200 disabled:bg-gray-600 disabled:text-gray-400 disabled:cursor-not-allowed text-sm font-medium transition-colors"
-          >
-            Create
-          </button>
-        </div>
-      </form>
-    </Modal>
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+      <div className="bg-[#1A1A1A] rounded-xl p-6 max-w-md w-full">
+        <h2 className="text-xl font-semibold text-white mb-4">
+          Create New API Key
+        </h2>
+        <form onSubmit={handleSubmit}>
+          <div className="mb-4">
+            <label
+              htmlFor="name"
+              className="block text-sm font-medium text-gray-300 mb-2"
+            >
+              Key Name
+            </label>
+            <input
+              type="text"
+              id="name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="w-full bg-[#2A2A2A] border border-gray-700 rounded-lg px-3 py-2 text-white"
+              placeholder="Enter a name for your API key"
+              required
+            />
+          </div>
+          <div className="flex justify-end gap-3">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 text-gray-300 hover:text-white"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="px-4 py-2 bg-white text-black rounded-lg hover:bg-gray-200 disabled:bg-gray-600"
+            >
+              {isLoading ? 'Creating...' : 'Create Key'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
   );
-} 
+}
