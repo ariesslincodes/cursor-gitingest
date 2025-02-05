@@ -1,11 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { apiKeyService } from '@/services/apiKeys';
-import { Sidebar } from '@/components/Sidebar';
-import { Header } from '@/components/dashboard/Header';
-import { CurrentPlan } from '@/components/dashboard/CurrentPlan';
-import { ApiKeyList } from '@/components/dashboard/ApiKeyList';
+import { apiKeyService } from '@/app/services/apiKeys';
+import { Sidebar } from '@/app/components/Sidebar';
+import { Header } from '@/app/components/dashboard/Header';
+import { CurrentPlan } from '@/app/components/dashboard/CurrentPlan';
+import { ApiKeyList } from '@/app/components/dashboard/ApiKeyList';
 
 interface ApiKey {
   id: string;

@@ -1,6 +1,6 @@
 import { LoginButton } from './components/LoginButton';
 import { ServiceCard } from './components/ServiceCard';
-import { ROUTES } from './lib/constants';
+import { ROUTES } from '@/lib/constants';
 
 export default function HomePage() {
   return (

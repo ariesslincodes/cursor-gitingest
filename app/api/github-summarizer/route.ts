@@ -1,4 +1,4 @@
-import { apiKeyService } from '@/services/apiKeys';
+import { apiKeyService } from '@/app/services/apiKeys';
 import { chain } from '@/services/chain';
 import { NextResponse } from 'next/server';
 

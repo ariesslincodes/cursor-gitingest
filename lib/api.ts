@@ -1,4 +1,4 @@
-import { ApiError } from '@/types/api';
+import { ApiError } from '../types/api';
 
 export class ApiClient {
   private static async fetch<T>(

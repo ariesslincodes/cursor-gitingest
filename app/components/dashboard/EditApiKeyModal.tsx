@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Modal } from '@/components/Modal';
-import { ApiKey, apiKeyService } from '@/services/apiKeys';
+import { Modal } from '@/app/components/Modal';
+import { ApiKey, apiKeyService } from '@/app/services/apiKeys';
 
 interface EditApiKeyModalProps {
   isOpen: boolean;
