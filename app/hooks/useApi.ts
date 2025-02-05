@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { ApiClient } from '@/lib/api';
-import { showToast } from '@/components/ToastContainer';
+import { ApiClient } from '../lib/api';
+import { showToast } from '../components/ToastContainer';
 
 export function useApi<T>() {
   const [data, setData] = useState<T | null>(null);
