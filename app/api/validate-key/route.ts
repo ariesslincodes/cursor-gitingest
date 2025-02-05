@@ -9,14 +9,14 @@ export async function POST(request: Request) {
     let apiKey: string;
 
     // Check if it's a JSON request (from web) or API request (from Postman)
-    const contentType = headersList.get('content-type');
+    const contentType = request.headers.get('content-type');
     if (contentType?.includes('application/json')) {
       // Web request with JSON body
       const body = await request.json();
       apiKey = body.apiKey;
     } else {
       // API request with Authorization header
-      const authHeader = headersList.get('authorization');
+      const authHeader = request.headers.get('authorization');
       if (!authHeader) {
         return NextResponse.json(
           { error: 'Missing Authorization header' },
