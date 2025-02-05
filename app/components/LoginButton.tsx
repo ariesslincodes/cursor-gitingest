@@ -1,14 +1,15 @@
 'use client';
 
 import { signIn, signOut, useSession } from 'next-auth/react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, usePathname } from 'next/navigation';
 import Image from 'next/image';
 import { Suspense } from 'react';
 
 function LoginButtonContent() {
   const { data: session, status } = useSession();
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get('callbackUrl') || '/';
+  const pathname = usePathname();
+  const callbackUrl = searchParams.get('callbackUrl') || pathname;
 
   if (status === 'loading') {
     return (
@@ -29,7 +30,7 @@ function LoginButtonContent() {
           height={32}
         />
         <button
-          onClick={() => signOut()}
+          onClick={() => signOut({ callbackUrl: '/' })}
           className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
         >
           Sign Out

@@ -9,9 +9,9 @@ const handler = NextAuth({
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
     }),
   ],
-  pages: {
-    signIn: '/',
-    error: '/',
+  secret: process.env.NEXTAUTH_SECRET,
+  session: {
+    strategy: 'jwt',
   },
   callbacks: {
     async session({ session, token }) {
@@ -31,14 +31,12 @@ const handler = NextAuth({
         return true;
       } catch (error) {
         console.error('Error saving user to Supabase:', error);
-        return true; // Still allow sign in even if DB save fails
+        return true;
       }
     },
     async redirect({ url, baseUrl }) {
-      // Allows relative callback URLs
-      if (url.startsWith('/')) return `${baseUrl}${url}`;
-      // Allows callback URLs on the same origin
-      else if (new URL(url).origin === baseUrl) return url;
+      if (url.startsWith(baseUrl)) return url;
+      else if (url.startsWith('/')) return new URL(url, baseUrl).toString();
       return baseUrl;
     },
   },
