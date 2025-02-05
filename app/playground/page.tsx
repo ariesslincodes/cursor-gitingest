@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { showToast } from '@/components/ToastContainer';
+import { showToast } from '@/app/components/ToastContainer';
 import { Header } from '../components/dashboard/Header';
 import Link from 'next/link';
 

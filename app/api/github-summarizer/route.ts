@@ -1,5 +1,5 @@
 import { apiKeyService } from '@/app/services/apiKeys';
-import { chain } from '@/services/chain';
+import { chain } from '@/app/services/chain';
 import { NextResponse } from 'next/server';
 
 // Helper function to extract repository info from GitHub URL

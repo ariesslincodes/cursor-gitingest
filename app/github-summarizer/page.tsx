@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Header } from '@/components/dashboard/Header';
+import { Header } from '@/app/components/dashboard/Header';
 import { showToast } from '@/app/components/ToastContainer';
 import Link from 'next/link';
 

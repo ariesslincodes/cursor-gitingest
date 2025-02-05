@@ -1,4 +1,4 @@
-import { apiKeyService } from '@/services/apiKeys';
+import { apiKeyService } from '@/app/services/apiKeys';
 import { NextResponse } from 'next/server';
 
 export async function POST(request: Request) {
