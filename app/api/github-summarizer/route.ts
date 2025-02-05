@@ -1,11 +1,6 @@
 import { apiKeyService } from '@/app/services/apiKeys';
 import { createRepositorySummary } from '@/app/services/chain';
 import { NextResponse } from 'next/server';
-import { ChatOpenAI } from "@langchain/openai";
-import { PromptTemplate } from "@langchain/core/prompts";
-import { StructuredOutputParser } from "langchain/output_parsers";
-import { RunnableSequence } from "@langchain/core/runnables";
-import { z } from "zod";
 
 // Helper function to validate API key
 async function validateApiKey(apiKey: string | null): Promise<boolean> {
@@ -30,7 +25,7 @@ async function parseGithubUrl(url: string) {
 
     // Remove any trailing slashes and split the pathname
     const parts = urlObj.pathname.replace(/^\/|\/$/g, '').split('/');
-    
+
     if (parts.length < 2) {
       throw new Error('Invalid GitHub URL format: missing owner or repository');
     }
@@ -41,15 +36,19 @@ async function parseGithubUrl(url: string) {
     // Fetch README content from GitHub API
     const readmeUrl = `https://api.github.com/repos/${owner}/${repo}/readme`;
     const response = await fetch(readmeUrl);
-    
+
     if (!response.ok) {
-      console.error('Failed to fetch README:', response.status, response.statusText);
+      console.error(
+        'Failed to fetch README:',
+        response.status,
+        response.statusText
+      );
       throw new Error('Failed to fetch README');
     }
-    
+
     const data = await response.json();
     const readmeContent = Buffer.from(data.content, 'base64').toString('utf-8');
-    
+
     return { owner, repo, readmeContent };
   } catch (error) {
     console.error('GitHub URL parsing error:', error);
@@ -68,7 +67,7 @@ export async function POST(request: Request) {
     console.log('Received API key:', apiKey);
     const isValidKey = await validateApiKey(apiKey);
     console.log('API key validation result:', isValidKey);
-    
+
     if (!isValidKey) {
       return NextResponse.json(
         { error: 'Invalid or missing API key' },
@@ -83,7 +82,7 @@ export async function POST(request: Request) {
       body = await request.json();
       console.log('Received request body:', body);
       githubUrl = body.githubUrl;
-      
+
       if (!githubUrl) {
         console.log('Missing githubUrl in request body');
         return NextResponse.json(
@@ -105,34 +104,50 @@ export async function POST(request: Request) {
       console.log('Attempting to parse GitHub URL:', githubUrl);
       repoInfo = await parseGithubUrl(githubUrl);
       console.log('Successfully parsed repo info:', repoInfo);
-    } catch (urlError) {
+    } catch (urlError: unknown) {
       console.error('URL parsing error:', urlError);
+
+      // Check if error is an Error instance before accessing message
+      if (urlError instanceof Error) {
+        return NextResponse.json(
+          { error: 'Invalid GitHub URL', details: urlError.message },
+          { status: 400 }
+        );
+      }
+
+      // Generic error response if not an Error instance
       return NextResponse.json(
-        { error: 'Invalid GitHub URL', details: urlError.message },
+        { error: 'Invalid GitHub URL' },
         { status: 400 }
       );
     }
 
     // Fetch repository data from GitHub API
-    console.log('Fetching repo data for:', `${repoInfo.owner}/${repoInfo.repo}`);
-    const response = await fetch(`https://api.github.com/repos/${repoInfo.owner}/${repoInfo.repo}`, {
-      headers: {
-        'Accept': 'application/vnd.github.v3+json',
-        'User-Agent': 'SuperCur-App'  // Added User-Agent header
+    console.log(
+      'Fetching repo data for:',
+      `${repoInfo.owner}/${repoInfo.repo}`
+    );
+    const response = await fetch(
+      `https://api.github.com/repos/${repoInfo.owner}/${repoInfo.repo}`,
+      {
+        headers: {
+          Accept: 'application/vnd.github.v3+json',
+          'User-Agent': 'SuperCur-App', // Added User-Agent header
+        },
       }
-    });
+    );
 
     if (!response.ok) {
       const errorData = await response.text();
       console.error('GitHub API error:', {
         status: response.status,
         statusText: response.statusText,
-        data: errorData
+        data: errorData,
       });
       return NextResponse.json(
-        { 
+        {
           error: 'Failed to fetch repository data',
-          details: `Status: ${response.status}, ${response.statusText}`
+          details: `Status: ${response.status}, ${response.statusText}`,
         },
         { status: response.status }
       );
@@ -143,33 +158,42 @@ export async function POST(request: Request) {
 
     try {
       // Generate summary using the chain service
-      const result = await createRepositorySummary(repoData, repoInfo.readmeContent);
+      const result = await createRepositorySummary(
+        repoData,
+        repoInfo.readmeContent
+      );
       return NextResponse.json(result);
     } catch (chainError: Error | unknown) {
       console.error('Chain service error:', chainError);
-      
+
       if (chainError instanceof Error) {
         // Handle rate limit errors
-        if (chainError.message?.includes('rate limit') || chainError.message?.includes('quota')) {
+        if (
+          chainError.message?.includes('rate limit') ||
+          chainError.message?.includes('quota')
+        ) {
           return NextResponse.json(
-            { 
+            {
               error: 'Service temporarily unavailable',
-              message: 'We are experiencing high demand. Please try again in a few minutes.'
+              message:
+                'We are experiencing high demand. Please try again in a few minutes.',
             },
             { status: 429 }
           );
         }
       }
-      
+
       throw chainError;
     }
-
   } catch (error) {
     console.error('Server error:', error);
     return NextResponse.json(
-      { 
+      {
         error: 'Internal server error',
-        message: error instanceof Error ? error.message : 'An unexpected error occurred'
+        message:
+          error instanceof Error
+            ? error.message
+            : 'An unexpected error occurred',
       },
       { status: 500 }
     );

@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { showToast } from '@/app/components/ToastContainer';
 
 interface SummaryResponse {
