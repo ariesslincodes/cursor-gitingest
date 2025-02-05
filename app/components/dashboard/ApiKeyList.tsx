@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { ApiKey, apiKeyService } from '@/app/services/apiKeys';
 import {
   EyeIcon,
@@ -23,23 +23,6 @@ export function ApiKeyList({ apiKeys, onUpdate }: ApiKeyListProps) {
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingKey, setEditingKey] = useState<ApiKey | null>(null);
   const [visibleKeyIds, setVisibleKeyIds] = useState<Set<string>>(new Set());
-  const [isLoading, setIsLoading] = useState(true);
-
-  const fetchApiKeys = async () => {
-    try {
-      const keys = await apiKeyService.fetchApiKeys();
-      setApiKeys(keys);
-    } catch (error) {
-      console.error('Failed to fetch API keys:', error);
-      showToast('Failed to load API keys', 'error');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchApiKeys();
-  }, []);
 
   const handleDelete = async (id: string) => {
     try {
@@ -74,10 +57,6 @@ export function ApiKeyList({ apiKeys, onUpdate }: ApiKeyListProps) {
   const maskApiKey = (key: string) => {
     return key.slice(0, 3) + '•'.repeat(37);
   };
-
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
 
   return (
     <>
