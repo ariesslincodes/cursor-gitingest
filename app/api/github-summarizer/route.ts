@@ -145,32 +145,23 @@ export async function POST(request: Request) {
       // Generate summary using the chain service
       const result = await createRepositorySummary(repoData, repoInfo.readmeContent);
       return NextResponse.json(result);
-    } catch (chainError: any) {
+    } catch (chainError: Error | unknown) {
       console.error('Chain service error:', chainError);
       
-      // Handle rate limit errors
-      if (chainError.message?.includes('rate limit') || chainError.message?.includes('quota')) {
-        return NextResponse.json(
-          { 
-            error: 'Service temporarily unavailable',
-            message: 'We are experiencing high demand. Please try again in a few minutes.'
-          },
-          { status: 429 }
-        );
+      if (chainError instanceof Error) {
+        // Handle rate limit errors
+        if (chainError.message?.includes('rate limit') || chainError.message?.includes('quota')) {
+          return NextResponse.json(
+            { 
+              error: 'Service temporarily unavailable',
+              message: 'We are experiencing high demand. Please try again in a few minutes.'
+            },
+            { status: 429 }
+          );
+        }
       }
       
-      // Handle API key errors
-      if (chainError.message?.includes('API key') || chainError.message?.includes('configuration')) {
-        return NextResponse.json(
-          { 
-            error: 'Service configuration error',
-            message: 'Please contact support if this issue persists.'
-          },
-          { status: 500 }
-        );
-      }
-      
-      throw chainError; // Re-throw other errors
+      throw chainError;
     }
 
   } catch (error) {

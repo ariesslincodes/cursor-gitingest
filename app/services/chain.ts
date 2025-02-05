@@ -175,16 +175,18 @@ export async function createRepositorySummary(repoData: RepoData, readmeContent:
         lastUpdated: repoData.updated_at
       }
     };
-  } catch (error: any) {
+  } catch (error: Error | unknown) {
     console.error('Error in createRepositorySummary:', error);
     
-    // Handle specific error types
-    if (error.code === 'insufficient_quota' || error.message?.includes('exceeded your current quota')) {
-      throw new Error('API rate limit exceeded. Please try again later.');
-    }
-    
-    if (error.code === 'invalid_api_key') {
-      throw new Error('Invalid API configuration. Please contact support.');
+    if (error instanceof Error) {
+      // Handle specific error types
+      if (error.message?.includes('exceeded your current quota')) {
+        throw new Error('API rate limit exceeded. Please try again later.');
+      }
+      
+      if (error.message?.includes('invalid_api_key')) {
+        throw new Error('Invalid API configuration. Please contact support.');
+      }
     }
     
     throw error;

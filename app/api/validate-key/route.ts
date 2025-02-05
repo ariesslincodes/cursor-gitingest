@@ -12,9 +12,9 @@ export async function POST(request: Request) {
       try {
         const body = await request.json();
         apiKey = body.apiKey;
-      } catch (jsonError) {
+      } catch {
         return NextResponse.json(
-          { error: 'Invalid JSON format. The request body must be valid JSON with an "apiKey" field' },
+          { error: 'Invalid JSON format in request body' },
           { status: 400 }
         );
       }
