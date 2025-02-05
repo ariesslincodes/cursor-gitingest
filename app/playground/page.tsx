@@ -8,33 +8,28 @@ import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 
 export default function PlaygroundPage() {
+  const { data: session, status } = useSession();
   const [apiKey, setApiKey] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
-  const { data: session } = useSession();
 
-  // If user is not logged in, show login prompt
-  if (!session) {
+  // Show loading state while checking session
+  if (status === 'loading') {
     return (
       <div className="min-h-screen bg-[#0A0A0A] p-8">
         <div className="max-w-6xl mx-auto">
           <div className="bg-[#1A1A1A] rounded-xl border border-gray-800 p-6">
-            <h2 className="text-xl font-semibold text-white mb-4">
-              Please Sign In
-            </h2>
-            <p className="text-gray-400 mb-4">
-              You need to be signed in to access the API Playground.
-            </p>
-            <Link
-              href="/"
-              className="px-4 py-2 bg-white text-black rounded-lg hover:bg-gray-200 text-sm font-medium transition-colors"
-            >
-              Go to Home
-            </Link>
+            <div className="animate-pulse">Loading...</div>
           </div>
         </div>
       </div>
     );
+  }
+
+  // If user is not logged in, redirect to home
+  if (!session) {
+    router.push('/');
+    return null;
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
