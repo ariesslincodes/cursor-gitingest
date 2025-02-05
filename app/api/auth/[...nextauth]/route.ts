@@ -1,11 +1,6 @@
 import NextAuth from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
-import { createClient } from '@supabase/supabase-js';
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+import { userService } from '@/services/user';
 
 const handler = NextAuth({
   providers: [
@@ -23,26 +18,16 @@ const handler = NextAuth({
     },
     async signIn({ user }) {
       try {
-        // Check if user exists in Supabase
-        const { data: existingUser } = await supabase
-          .from('users')
-          .select()
-          .eq('email', user.email)
-          .single();
-
-        if (!existingUser) {
-          // Create new user in Supabase
-          await supabase.from('users').insert({
-            id: user.id,
-            email: user.email,
-            name: user.name,
-            image: user.image,
-          });
-        }
+        await userService.createOrUpdateUser({
+          id: user.id,
+          email: user.email!,
+          name: user.name,
+          image: user.image,
+        });
         return true;
       } catch (error) {
-        console.error('Error during sign in:', error);
-        return false;
+        console.error('Error saving user to Supabase:', error);
+        return true; // Still allow sign in even if DB save fails
       }
     },
   },

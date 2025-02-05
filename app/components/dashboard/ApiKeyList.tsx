@@ -28,7 +28,7 @@ export function ApiKeyList({ apiKeys, onUpdate }: ApiKeyListProps) {
     try {
       await apiKeyService.deleteApiKey(id);
       onUpdate();
-      showToast('API key deleted successfully', 'success');
+      showToast('API key deleted successfully', 'error');
     } catch (error) {
       console.error('Failed to delete API key:', error);
       showToast('Failed to delete API key', 'error');
