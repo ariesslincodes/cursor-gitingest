@@ -15,6 +15,11 @@ export interface ApiKey {
   usage: number;
 }
 
+interface UpdateApiKeyData {
+  name: string;
+  // other fields...
+}
+
 export const apiKeyService = {
   async fetchApiKeys() {
     const { data, error } = await supabase
@@ -41,11 +46,8 @@ export const apiKeyService = {
     return key;
   },
 
-  async updateApiKey(id: string, name: string) {
-    const { error } = await supabase
-      .from('api_keys')
-      .update({ name })
-      .eq('id', id);
+  async updateApiKey(id: string, data: UpdateApiKeyData) {
+    const { error } = await supabase.from('api_keys').update(data).eq('id', id);
 
     if (error) throw error;
   },
