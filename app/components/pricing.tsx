@@ -18,6 +18,7 @@ const plans = [
       'Basic summaries',
       'Star count tracking',
     ],
+    comingSoon: false,
   },
   {
     name: 'Pro',
@@ -29,6 +30,7 @@ const plans = [
       'PR insights',
       'Version update notifications',
     ],
+    comingSoon: true,
   },
   {
     name: 'Enterprise',
@@ -40,6 +42,7 @@ const plans = [
       'Priority support',
       'Team management',
     ],
+    comingSoon: true,
   },
 ];
 
@@ -50,7 +53,15 @@ export default function Pricing() {
         <h2 className="text-3xl font-bold text-center mb-12">Pricing</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {plans.map((plan, index) => (
-            <Card key={index} className={index === 1 ? 'border-primary' : ''}>
+            <Card
+              key={index}
+              className={index === 1 ? 'border-primary relative' : 'relative'}
+            >
+              {plan.comingSoon && (
+                <div className="absolute -top-3 right-2 bg-orange-400 text-white text-sm font-medium px-3 py-1 rounded-full">
+                  Coming Soon
+                </div>
+              )}
               <CardHeader>
                 <CardTitle>{plan.name}</CardTitle>
                 <CardDescription>{plan.description}</CardDescription>
@@ -83,6 +94,12 @@ export default function Pricing() {
                 <Button
                   className="w-full"
                   variant={index === 1 ? 'default' : 'outline'}
+                  disabled={plan.comingSoon}
+                  style={
+                    plan.comingSoon
+                      ? { opacity: 0.5, cursor: 'not-allowed' }
+                      : undefined
+                  }
                 >
                   {index === 2 ? 'Contact Sales' : 'Get Started'}
                 </Button>

@@ -5,6 +5,7 @@ import React from 'react';
 interface HeaderProps {
   title: string;
   breadcrumbs: string[];
+  className?: string;
   backButton?: React.ReactNode;
   showStatus?: boolean;
 }
@@ -12,25 +13,22 @@ interface HeaderProps {
 export function Header({
   title,
   breadcrumbs,
+  className = '',
   backButton,
   showStatus = true,
 }: HeaderProps) {
   return (
-    <div className="flex justify-between items-center mb-8">
-      <div>
-        {backButton && <div className="mb-4">{backButton}</div>}
-        <h1 className="text-3xl font-bold text-white">{title}</h1>
-        <div className="flex items-center gap-2 mt-1">
-          {breadcrumbs.map((crumb, index) => (
-            <React.Fragment key={crumb}>
-              <span className="text-sm text-gray-400">{crumb}</span>
-              {index < breadcrumbs.length - 1 && (
-                <span className="text-sm text-gray-400">/</span>
-              )}
-            </React.Fragment>
-          ))}
-        </div>
+    <div className={`flex flex-col gap-1 ${className}`}>
+      <div className="flex items-center gap-2 text-sm text-gray-400">
+        {breadcrumbs.map((crumb, index) => (
+          <div key={crumb} className="flex items-center gap-2">
+            {index > 0 && <span>/</span>}
+            <span>{crumb}</span>
+          </div>
+        ))}
       </div>
+      <h1 className="text-2xl font-bold text-white">{title}</h1>
+      {backButton && <div className="mb-4">{backButton}</div>}
       {showStatus && (
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
