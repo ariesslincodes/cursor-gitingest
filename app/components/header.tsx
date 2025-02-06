@@ -8,9 +8,21 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 export default function Header() {
   const navigationItems = [
     {
+      name: 'Features',
+      href: '#features',
+      className:
+        'text-lg font-medium text-gray-300 hover:text-white transition-colors',
+    },
+    {
+      name: 'Pricing',
+      href: '#pricing',
+      className:
+        'text-lg font-medium text-gray-300 hover:text-white transition-colors',
+    },
+    {
       name: 'Dashboard',
       href: '/dashboards',
-      className: 'text-white hover:text-gray-300',
+      className: 'text-lg font-medium text-white transition-colors',
     },
   ];
 
@@ -38,7 +50,10 @@ export default function Header() {
                 <Menu className="h-5 w-5" />
               </Button>
             </SheetTrigger>
-            <SheetContent>
+            <SheetContent
+              side="right"
+              className="w-[300px] bg-black border-gray-800"
+            >
               <div className="flex flex-col gap-4 pt-10">
                 {navigationItems.map((item) => (
                   <Link
@@ -60,8 +75,12 @@ export default function Header() {
           {navigationItems.map((item) => (
             <Button
               key={item.name}
-              variant="ghost"
-              className={item.className}
+              variant={item.name === 'Dashboard' ? 'default' : 'ghost'}
+              className={
+                item.name === 'Dashboard'
+                  ? 'bg-white text-black hover:bg-gray-200'
+                  : 'text-gray-300 hover:text-white hover:bg-gray-800'
+              }
               asChild
             >
               <Link href={item.href}>{item.name}</Link>
