@@ -1,12 +1,19 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { ROUTES } from '@/lib/constants';
 import { LoginButton } from './LoginButton';
 import { Menu } from 'lucide-react';
 import Image from 'next/image';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 
 export default function Header() {
+  const navigationItems = [
+    {
+      name: 'Dashboard',
+      href: '/dashboards',
+      className: 'text-white hover:text-gray-300',
+    },
+  ];
+
   return (
     <header className="border-b border-gray-800 bg-black/80 backdrop-blur-sm fixed top-0 w-full z-50">
       <div className="container mx-auto px-4 py-4 flex justify-between items-center">
@@ -33,24 +40,15 @@ export default function Header() {
             </SheetTrigger>
             <SheetContent>
               <div className="flex flex-col gap-4 pt-10">
-                <Link
-                  href="#features"
-                  className="text-lg font-medium text-gray-300 hover:text-white transition-colors"
-                >
-                  Features
-                </Link>
-                <Link
-                  href="#pricing"
-                  className="text-lg font-medium text-gray-300 hover:text-white transition-colors"
-                >
-                  Pricing
-                </Link>
-                <Link
-                  href={ROUTES.DASHBOARD}
-                  className="text-lg font-medium text-white"
-                >
-                  Dashboard
-                </Link>
+                {navigationItems.map((item) => (
+                  <Link
+                    key={item.name}
+                    href={item.href}
+                    className={item.className}
+                  >
+                    {item.name}
+                  </Link>
+                ))}
                 <LoginButton />
               </div>
             </SheetContent>
@@ -59,27 +57,16 @@ export default function Header() {
 
         {/* Desktop Menu */}
         <nav className="hidden lg:flex items-center space-x-2">
-          <Button
-            variant="ghost"
-            className="text-gray-300 hover:text-white hover:bg-gray-800"
-            asChild
-          >
-            <Link href="#features">Features</Link>
-          </Button>
-          <Button
-            variant="ghost"
-            className="text-gray-300 hover:text-white hover:bg-gray-800"
-            asChild
-          >
-            <Link href="#pricing">Pricing</Link>
-          </Button>
-          <Button
-            variant="default"
-            className="bg-white text-black hover:bg-gray-200"
-            asChild
-          >
-            <Link href={ROUTES.DASHBOARD}>Dashboard</Link>
-          </Button>
+          {navigationItems.map((item) => (
+            <Button
+              key={item.name}
+              variant="ghost"
+              className={item.className}
+              asChild
+            >
+              <Link href={item.href}>{item.name}</Link>
+            </Button>
+          ))}
           <LoginButton />
         </nav>
       </div>

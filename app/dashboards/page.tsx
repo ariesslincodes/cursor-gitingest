@@ -10,6 +10,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { Providers } from '@/app/providers';
 import { Toast } from '@/app/components/Toast';
+import { Menu } from 'lucide-react';
 
 interface ApiKey {
   id: string;
@@ -31,7 +32,7 @@ export default function DashboardsPage() {
   const [apiKeys, setApiKeys] = useState<ApiKey[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isClient, setIsClient] = useState(false);
-  const [isSidebarOpen] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [toast, setToast] = useState<ToastInfo | null>(null);
 
   const fetchApiKeys = async () => {
@@ -55,6 +56,18 @@ export default function DashboardsPage() {
     setTimeout(() => setToast(null), 3000);
   };
 
+  // Toggle sidebar
+  const toggleSidebar = () => {
+    setIsSidebarOpen(!isSidebarOpen);
+  };
+
+  // Close sidebar when clicking outside on mobile
+  const handleMainClick = () => {
+    if (window.innerWidth < 1024 && isSidebarOpen) {
+      setIsSidebarOpen(false);
+    }
+  };
+
   // Show loading state while checking session
   if (status === 'loading' || !isClient) {
     return (
@@ -72,14 +85,65 @@ export default function DashboardsPage() {
 
   return (
     <Providers>
-      <div className="flex min-h-screen bg-[#0A0A0A]">
-        <Sidebar />
-
-        <main
-          className={`flex-1 ${isSidebarOpen ? 'ml-64' : 'ml-0'} p-8 max-w-6xl`}
+      <div className="flex min-h-screen bg-[#0A0A0A] relative">
+        {/* Mobile menu button */}
+        <button
+          onClick={toggleSidebar}
+          className="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-md bg-gray-800 text-white"
+          aria-label="Toggle menu"
         >
+          <Menu className="h-6 w-6" />
+        </button>
+
+        {/* Overlay for mobile */}
+        {isSidebarOpen && (
+          <div
+            className="fixed inset-0 bg-black bg-opacity-50 lg:hidden z-30"
+            onClick={toggleSidebar}
+          />
+        )}
+
+        {/* Sidebar */}
+        <Sidebar
+          isOpen={isSidebarOpen}
+          onClose={() => setIsSidebarOpen(false)}
+        />
+
+        {/* Main content */}
+        <main
+          onClick={handleMainClick}
+          className={`
+            flex-1 w-full min-h-screen
+            transition-all duration-300 ease-in-out
+            px-4 py-24 lg:py-8 lg:px-8
+            ${isSidebarOpen ? 'lg:ml-[280px]' : 'lg:ml-0'}
+          `}
+        >
+          <div className="max-w-6xl mx-auto">
+            <Header
+              title="Overview"
+              breadcrumbs={['Pages', 'Overview']}
+              className="mb-8"
+            />
+
+            {error && (
+              <div className="bg-red-900/20 border border-red-500/20 text-red-400 px-4 py-3 rounded-lg mb-4">
+                {error}
+              </div>
+            )}
+
+            <div className="space-y-6">
+              <CurrentPlan />
+              <ApiKeyList
+                apiKeys={apiKeys}
+                onUpdate={fetchApiKeys}
+                onToast={handleToast}
+              />
+            </div>
+          </div>
+
           {toast && (
-            <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50">
+            <div className="fixed top-4 right-4 z-50">
               <Toast
                 message={toast.message}
                 type={toast.type}
@@ -87,22 +151,6 @@ export default function DashboardsPage() {
               />
             </div>
           )}
-
-          <Header title="Overview" breadcrumbs={['Pages', 'Overview']} />
-
-          {error && (
-            <div className="bg-red-900/20 border border-red-500/20 text-red-400 px-4 py-3 rounded-lg mb-4">
-              {error}
-            </div>
-          )}
-
-          <CurrentPlan />
-
-          <ApiKeyList
-            apiKeys={apiKeys}
-            onUpdate={fetchApiKeys}
-            onToast={handleToast}
-          />
         </main>
       </div>
     </Providers>

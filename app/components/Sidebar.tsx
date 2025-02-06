@@ -1,45 +1,35 @@
 'use client';
 
-import { useState } from 'react';
 import {
   HomeIcon,
   UserIcon,
   CodeBracketIcon,
   BookOpenIcon,
-  ChevronLeftIcon,
-  ChevronRightIcon,
 } from '@heroicons/react/24/outline';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { ROUTES } from '@/lib/constants';
 
-export function Sidebar() {
-  const [isOpen, setIsOpen] = useState(true);
-  const pathname = usePathname();
+interface SidebarProps {
+  isOpen: boolean;
+  onClose?: () => void;
+}
 
+export function Sidebar({ isOpen }: SidebarProps) {
+  const pathname = usePathname();
   const isActive = (path: string) => pathname === path;
 
   return (
-    <>
-      {/* Toggle Button */}
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="fixed top-4 left-4 z-50 p-2 rounded-lg bg-[#2A2A2A] text-gray-400 hover:text-white"
-        title={isOpen ? 'Hide sidebar' : 'Show sidebar'}
-      >
-        {isOpen ? (
-          <ChevronLeftIcon className="w-6 h-6" />
-        ) : (
-          <ChevronRightIcon className="w-6 h-6" />
-        )}
-      </button>
-
-      {/* Sidebar */}
-      <div
-        className={`fixed left-0 top-0 h-full w-64 bg-[#1A1A1A] border-r border-gray-800 flex flex-col transform transition-transform duration-200 ease-in-out ${
-          isOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}
-      >
+    <aside
+      className={`
+        w-[280px] h-screen bg-[#0A0A0A] border-r border-gray-800 
+        fixed lg:sticky top-0 
+        transition-transform duration-300 ease-in-out
+        ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+        z-40
+      `}
+    >
+      <div className="px-6 py-4 h-full overflow-y-auto">
         {/* Logo */}
         <div className="p-6 mt-8">
           <h1 className="text-2xl font-bold text-white">SuperCur</h1>
@@ -149,6 +139,6 @@ export function Sidebar() {
           </div>
         </nav>
       </div>
-    </>
+    </aside>
   );
 }

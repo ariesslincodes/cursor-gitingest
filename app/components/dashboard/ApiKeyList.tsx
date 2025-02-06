@@ -59,90 +59,180 @@ export function ApiKeyList({ apiKeys, onUpdate, onToast }: ApiKeyListProps) {
   };
 
   const maskApiKey = (key: string) => {
-    return key.slice(0, 3) + '•'.repeat(37);
+    return `${key.slice(0, 3)}${'•'.repeat(20)}`;
   };
 
   return (
     <>
-      <div className="bg-[#1A1A1A] rounded-xl border border-gray-800">
-        <div className="flex justify-between items-center p-6 border-b border-gray-800">
+      <div className="rounded-lg border border-gray-800">
+        <div className="p-4 flex justify-between items-center">
           <h2 className="text-xl font-semibold text-white">API Keys</h2>
           <button
             onClick={() => setShowCreateModal(true)}
-            className="px-4 py-2 bg-white text-black rounded-lg hover:bg-gray-200 disabled:bg-gray-600 disabled:text-gray-400 disabled:cursor-not-allowed text-sm font-medium transition-colors"
+            className="px-4 py-2 bg-white text-black rounded-lg hover:bg-gray-100 transition-colors"
           >
             + Create New Key
           </button>
         </div>
 
-        <div className="divide-y divide-gray-800">
-          {/* Header */}
-          <div className="grid grid-cols-12 gap-4 px-6 py-3 text-sm font-medium text-gray-400">
-            <div className="col-span-3">NAME</div>
-            <div className="col-span-5">KEY</div>
-            <div className="col-span-2">USAGE</div>
-            <div className="col-span-2 text-right">OPTIONS</div>
+        <div className="w-full">
+          {/* Mobile view */}
+          <div className="md:hidden">
+            {apiKeys.map((key) => (
+              <div key={key.id} className="border-t border-gray-800 p-4">
+                <div className="space-y-4">
+                  {/* Info row */}
+                  <div className="grid grid-cols-3 gap-2">
+                    <div>
+                      <div className="text-sm text-gray-400">NAME</div>
+                      <div className="text-white truncate">{key.name}</div>
+                    </div>
+
+                    <div>
+                      <div className="text-sm text-gray-400">KEY</div>
+                      <div className="text-gray-400 font-mono truncate">
+                        {visibleKeyIds.has(key.id) ? (
+                          <span>{key.key}</span>
+                        ) : (
+                          <span>{maskApiKey(key.key)}</span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="text-sm text-gray-400">USAGE</div>
+                      <div className="text-gray-400">{key.usage}</div>
+                    </div>
+                  </div>
+
+                  {/* Action buttons */}
+                  <div className="flex justify-end gap-2">
+                    <button
+                      onClick={() => toggleKeyVisibility(key.id)}
+                      className="p-1.5 hover:bg-gray-800 rounded-lg transition-colors"
+                      title={
+                        visibleKeyIds.has(key.id)
+                          ? 'Hide API key'
+                          : 'Show API key'
+                      }
+                    >
+                      {visibleKeyIds.has(key.id) ? (
+                        <EyeSlashIcon className="w-4 h-4 text-gray-400" />
+                      ) : (
+                        <EyeIcon className="w-4 h-4 text-gray-400" />
+                      )}
+                    </button>
+                    <button
+                      onClick={() => handleCopy(key.key)}
+                      className="p-1.5 hover:bg-gray-800 rounded-lg transition-colors"
+                      title="Copy to clipboard"
+                    >
+                      <ClipboardIcon className="w-4 h-4 text-gray-400" />
+                    </button>
+                    <button
+                      onClick={() => {
+                        setEditingKey(key);
+                        setShowEditModal(true);
+                      }}
+                      className="p-1.5 hover:bg-gray-800 rounded-lg transition-colors"
+                      title="Edit"
+                    >
+                      <PencilIcon className="w-4 h-4 text-gray-400" />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(key.id)}
+                      disabled={isDeleting}
+                      className="p-1.5 hover:bg-gray-800 rounded-lg transition-colors"
+                      title="Delete"
+                    >
+                      <TrashIcon className="w-4 h-4 text-gray-400" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
 
-          {/* API Keys */}
-          {apiKeys.map((key) => (
-            <div
-              key={key.id}
-              className="grid grid-cols-12 gap-4 px-6 py-4 items-center"
-            >
-              <div className="col-span-3">
-                <span className="font-medium text-white">{key.name}</span>
-              </div>
-              <div className="col-span-5">
-                <code className="font-mono text-sm bg-[#2A2A2A] px-3 py-1.5 rounded-lg text-gray-300 w-full inline-block">
-                  {visibleKeyIds.has(key.id) ? key.key : maskApiKey(key.key)}
-                </code>
-              </div>
-              <div className="col-span-2 text-sm text-gray-400">
-                {key.usage}
-              </div>
-              <div className="col-span-2 flex justify-end gap-2">
-                <button
-                  onClick={() => toggleKeyVisibility(key.id)}
-                  className="p-1.5 hover:bg-[#2A2A2A] rounded-lg transition-colors"
-                  title={
-                    visibleKeyIds.has(key.id) ? 'Hide API key' : 'Show API key'
-                  }
-                >
-                  {visibleKeyIds.has(key.id) ? (
-                    <EyeSlashIcon className="w-5 h-5 text-gray-400 hover:text-white" />
-                  ) : (
-                    <EyeIcon className="w-5 h-5 text-gray-400 hover:text-white" />
-                  )}
-                </button>
-                <button
-                  onClick={() => handleCopy(key.key)}
-                  className="p-1.5 hover:bg-[#2A2A2A] rounded-lg transition-colors"
-                  title="Copy to clipboard"
-                >
-                  <ClipboardIcon className="w-5 h-5 text-gray-400 hover:text-white" />
-                </button>
-                <button
-                  onClick={() => {
-                    setEditingKey(key);
-                    setShowEditModal(true);
-                  }}
-                  className="p-1.5 text-gray-400 hover:text-white hover:bg-[#2A2A2A] rounded-lg transition-colors"
-                  title="Edit"
-                >
-                  <PencilIcon className="w-5 h-5" />
-                </button>
-                <button
-                  onClick={() => handleDelete(key.id)}
-                  disabled={isDeleting}
-                  className="p-1.5 text-gray-400 hover:text-white hover:bg-[#2A2A2A] rounded-lg transition-colors"
-                  title="Delete"
-                >
-                  <TrashIcon className="w-5 h-5" />
-                </button>
-              </div>
-            </div>
-          ))}
+          {/* Desktop view */}
+          <div className="hidden md:block">
+            <table className="w-full">
+              <thead className="border-y border-gray-800">
+                <tr>
+                  <th className="text-left p-4 text-gray-400 font-medium">
+                    NAME
+                  </th>
+                  <th className="text-left p-4 text-gray-400 font-medium">
+                    KEY
+                  </th>
+                  <th className="text-left p-4 text-gray-400 font-medium">
+                    USAGE
+                  </th>
+                  <th className="text-left p-4 text-gray-400 font-medium">
+                    OPTIONS
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {apiKeys.map((key) => (
+                  <tr key={key.id} className="border-t border-gray-800">
+                    <td className="p-4 text-white">{key.name}</td>
+                    <td className="p-4 text-gray-400 font-mono">
+                      {visibleKeyIds.has(key.id) ? (
+                        <span>{key.key}</span>
+                      ) : (
+                        <span>{maskApiKey(key.key)}</span>
+                      )}
+                    </td>
+                    <td className="p-4 text-gray-400">{key.usage}</td>
+                    <td className="p-4">
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => toggleKeyVisibility(key.id)}
+                          className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
+                          title={
+                            visibleKeyIds.has(key.id)
+                              ? 'Hide API key'
+                              : 'Show API key'
+                          }
+                        >
+                          {visibleKeyIds.has(key.id) ? (
+                            <EyeSlashIcon className="w-5 h-5 text-gray-400" />
+                          ) : (
+                            <EyeIcon className="w-5 h-5 text-gray-400" />
+                          )}
+                        </button>
+                        <button
+                          onClick={() => handleCopy(key.key)}
+                          className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
+                          title="Copy to clipboard"
+                        >
+                          <ClipboardIcon className="w-5 h-5 text-gray-400" />
+                        </button>
+                        <button
+                          onClick={() => {
+                            setEditingKey(key);
+                            setShowEditModal(true);
+                          }}
+                          className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
+                          title="Edit"
+                        >
+                          <PencilIcon className="w-5 h-5 text-gray-400" />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(key.id)}
+                          disabled={isDeleting}
+                          className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
+                          title="Delete"
+                        >
+                          <TrashIcon className="w-5 h-5 text-gray-400" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
 
