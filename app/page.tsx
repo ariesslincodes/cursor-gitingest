@@ -3,7 +3,7 @@ import Hero from './components/hero';
 import Features from './components/features';
 import Pricing from './components/pricing';
 import Footer from './components/footer';
-
+import ApiDemo from './components/apidemo';
 export default function HomePage() {
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-b from-[#FAFAFA] via-[#F5F5F5] to-[#F0F0F0]">
@@ -14,6 +14,7 @@ export default function HomePage() {
         <Hero />
         <Features />
         <Pricing />
+        <ApiDemo />
       </main>
       <Footer />
     </div>
