@@ -35,7 +35,7 @@ export function EditApiKeyModal({
 
     setIsLoading(true);
     try {
-      await apiKeyService.updateApiKey(apiKey.id, name);
+      await apiKeyService.updateApiKey(apiKey.id, { name });
       onSuccess();
       onClose();
       showToast('API key updated successfully', 'success');
