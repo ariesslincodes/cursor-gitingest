@@ -7,9 +7,14 @@ export default function Hero() {
     <section className="relative py-20">
       <div className="container mx-auto px-4">
         <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-5xl md:text-6xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400 leading-[1.3]">
-            <span className="block mb-4">Supercharge Your GitHub</span>
-            <span className="block mt-2 pb-2">Insights with SuperCur</span>
+          <h1 className="text-4xl md:text-6xl font-bold tracking-tighter">
+            <span className="bg-gradient-to-r from-[#60A5FA] via-[#3B82F6] to-[#38BDF8] text-transparent bg-clip-text">
+              Supercharge Your GitHub
+            </span>
+            <br />
+            <span className="bg-gradient-to-r from-[#60A5FA] via-[#3B82F6] to-[#38BDF8] text-transparent bg-clip-text">
+              Insights with SuperCur
+            </span>
           </h1>
           <p className="text-xl mb-12 text-muted-foreground max-w-2xl mx-auto">
             Get summaries, stars, cool facts, latest PRs, and version updates
