@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Header } from '@/app/components/dashboard/Header';
 import { showToast } from '@/app/components/ToastContainer';
 import Link from 'next/link';
+import { ROUTES } from '@/lib/constants';
 
 interface SummaryResponse {
   summary: string;
@@ -63,9 +64,10 @@ export default function GitHubSummarizerPage() {
       <Header
         title="GitHub Repository Summarizer"
         breadcrumbs={['Pages', 'GitHub Summarizer']}
+        showStatus={false}
         backButton={
           <Link
-            href="/"
+            href={ROUTES.DASHBOARD}
             className="inline-flex items-center justify-center text-sm font-medium text-gray-400 hover:text-white transition-colors"
           >
             <svg
@@ -83,7 +85,7 @@ export default function GitHubSummarizerPage() {
               <path d="m12 19-7-7 7-7" />
               <path d="M19 12H5" />
             </svg>
-            Back
+            Back to Dashboard
           </Link>
         }
       />

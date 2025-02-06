@@ -9,6 +9,7 @@ interface EditApiKeyModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
+  onError: () => void;
   apiKey: ApiKey | null;
 }
 
@@ -16,6 +17,7 @@ export function EditApiKeyModal({
   isOpen,
   onClose,
   onSuccess,
+  onError,
   apiKey,
 }: EditApiKeyModalProps) {
   const [name, setName] = useState('');
@@ -33,12 +35,16 @@ export function EditApiKeyModal({
 
     setIsLoading(true);
     try {
-      await apiKeyService.updateApiKey(apiKey.id, name);
+      await apiKeyService.updateApiKey(apiKey.id, {
+        name: name,
+        // other fields...
+      });
       onSuccess();
       onClose();
       showToast('API key updated successfully', 'success');
-    } catch (err) {
-      console.error('Failed to update API key:', err);
+    } catch (error) {
+      console.error('Failed to update API key:', error);
+      onError();
       showToast('Failed to update API key', 'error');
     } finally {
       setIsLoading(false);

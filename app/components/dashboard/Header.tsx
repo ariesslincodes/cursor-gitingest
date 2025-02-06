@@ -6,9 +6,15 @@ interface HeaderProps {
   title: string;
   breadcrumbs: string[];
   backButton?: React.ReactNode;
+  showStatus?: boolean;
 }
 
-export function Header({ title, breadcrumbs, backButton }: HeaderProps) {
+export function Header({
+  title,
+  breadcrumbs,
+  backButton,
+  showStatus = true,
+}: HeaderProps) {
   return (
     <div className="flex justify-between items-center mb-8">
       <div>
@@ -25,18 +31,20 @@ export function Header({ title, breadcrumbs, backButton }: HeaderProps) {
           ))}
         </div>
       </div>
-      <div className="flex items-center gap-4">
-        <div className="flex items-center gap-2">
-          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-          <span className="text-sm text-gray-300">Operational</span>
+      {showStatus && (
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+            <span className="text-sm text-gray-300">Operational</span>
+          </div>
+          <button
+            onClick={() => (window.location.href = '/')}
+            className="px-4 py-2 text-gray-300 hover:text-white transition-colors"
+          >
+            ← Back
+          </button>
         </div>
-        <button
-          onClick={() => (window.location.href = '/')}
-          className="px-4 py-2 text-gray-300 hover:text-white transition-colors"
-        >
-          ← Back
-        </button>
-      </div>
+      )}
     </div>
   );
 }

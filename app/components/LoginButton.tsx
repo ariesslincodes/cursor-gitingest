@@ -4,6 +4,7 @@ import { signIn, signOut, useSession } from 'next-auth/react';
 import { useSearchParams, usePathname } from 'next/navigation';
 import Image from 'next/image';
 import { Suspense } from 'react';
+import { Button } from '@/components/ui/button';
 
 function LoginButtonContent() {
   const { data: session, status } = useSession();
@@ -13,36 +14,36 @@ function LoginButtonContent() {
 
   if (status === 'loading') {
     return (
-      <button disabled className="px-4 py-2 bg-gray-200 rounded-lg">
+      <Button variant="default" disabled>
         Loading...
-      </button>
+      </Button>
     );
   }
 
   if (session) {
     return (
-      <div className="flex items-center gap-4">
+      <Button
+        variant="default"
+        onClick={() => signOut({ callbackUrl: '/' })}
+        className="flex items-center gap-2 w-full lg:w-auto"
+      >
         <Image
           src={session.user?.image ?? '/default-avatar.png'}
           alt={session.user?.name ?? 'User'}
-          className="w-8 h-8 rounded-full"
-          width={32}
-          height={32}
+          className="rounded-full"
+          width={24}
+          height={24}
         />
-        <button
-          onClick={() => signOut({ callbackUrl: '/' })}
-          className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
-        >
-          Sign Out
-        </button>
-      </div>
+        Sign Out
+      </Button>
     );
   }
 
   return (
-    <button
+    <Button
+      variant="default"
       onClick={() => signIn('google', { callbackUrl })}
-      className="px-4 py-2 bg-white text-black rounded-lg hover:bg-gray-200 flex items-center gap-2"
+      className="flex items-center gap-2 w-full lg:w-auto"
     >
       <svg
         className="w-5 h-5"
@@ -66,8 +67,8 @@ function LoginButtonContent() {
           fill="#EA4335"
         />
       </svg>
-      Sign in with Google
-    </button>
+      Sign in
+    </Button>
   );
 }
 
@@ -75,9 +76,9 @@ export function LoginButton() {
   return (
     <Suspense
       fallback={
-        <button disabled className="px-4 py-2 bg-gray-200 rounded-lg">
+        <Button variant="default" disabled>
           Loading...
-        </button>
+        </Button>
       }
     >
       <LoginButtonContent />

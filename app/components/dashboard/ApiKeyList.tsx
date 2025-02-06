@@ -9,29 +9,37 @@ import {
   PencilIcon,
   TrashIcon,
 } from '@heroicons/react/24/outline';
-import { showToast } from '@/app/components/ToastContainer';
 import { CreateApiKeyModal } from './CreateApiKeyModal';
 import { EditApiKeyModal } from './EditApiKeyModal';
 
 interface ApiKeyListProps {
   apiKeys: ApiKey[];
   onUpdate: () => void;
+  onToast: (message: string, type: 'success' | 'error') => void;
 }
 
-export function ApiKeyList({ apiKeys, onUpdate }: ApiKeyListProps) {
+export function ApiKeyList({ apiKeys, onUpdate, onToast }: ApiKeyListProps) {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingKey, setEditingKey] = useState<ApiKey | null>(null);
   const [visibleKeyIds, setVisibleKeyIds] = useState<Set<string>>(new Set());
+  const [isDeleting, setIsDeleting] = useState(false);
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (keyId: string) => {
+    if (!window.confirm('Are you sure you want to delete this API key?')) {
+      return;
+    }
+
+    setIsDeleting(true);
     try {
-      await apiKeyService.deleteApiKey(id);
+      await apiKeyService.deleteApiKey(keyId);
+      onToast('API key deleted successfully', 'error');
       onUpdate();
-      showToast('API key deleted successfully', 'error');
     } catch (error) {
       console.error('Failed to delete API key:', error);
-      showToast('Failed to delete API key', 'error');
+      onToast('Failed to delete API key', 'error');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -45,13 +53,9 @@ export function ApiKeyList({ apiKeys, onUpdate }: ApiKeyListProps) {
     setVisibleKeyIds(newVisibleKeys);
   };
 
-  const copyToClipboard = async (key: string) => {
-    try {
-      await navigator.clipboard.writeText(key);
-      showToast('Copied API Key to clipboard');
-    } catch (err) {
-      console.error('Failed to copy to clipboard:', err);
-    }
+  const handleCopy = (key: string) => {
+    navigator.clipboard.writeText(key);
+    onToast('API key copied to clipboard', 'success');
   };
 
   const maskApiKey = (key: string) => {
@@ -112,7 +116,7 @@ export function ApiKeyList({ apiKeys, onUpdate }: ApiKeyListProps) {
                   )}
                 </button>
                 <button
-                  onClick={() => copyToClipboard(key.key)}
+                  onClick={() => handleCopy(key.key)}
                   className="p-1.5 hover:bg-[#2A2A2A] rounded-lg transition-colors"
                   title="Copy to clipboard"
                 >
@@ -130,6 +134,7 @@ export function ApiKeyList({ apiKeys, onUpdate }: ApiKeyListProps) {
                 </button>
                 <button
                   onClick={() => handleDelete(key.id)}
+                  disabled={isDeleting}
                   className="p-1.5 text-gray-400 hover:text-white hover:bg-[#2A2A2A] rounded-lg transition-colors"
                   title="Delete"
                 >
@@ -151,7 +156,13 @@ export function ApiKeyList({ apiKeys, onUpdate }: ApiKeyListProps) {
       <EditApiKeyModal
         isOpen={showEditModal}
         onClose={() => setShowEditModal(false)}
-        onSuccess={onUpdate}
+        onSuccess={() => {
+          onToast('API key updated successfully', 'success');
+          onUpdate();
+        }}
+        onError={() => {
+          onToast('Failed to update API key', 'error');
+        }}
         apiKey={editingKey}
       />
     </>
