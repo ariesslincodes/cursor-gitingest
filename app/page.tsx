@@ -8,7 +8,7 @@ export default function HomePage() {
   return (
     <div className="min-h-screen flex flex-col bg-[#0A0A0A]">
       <Header />
-      <main className="flex-grow">
+      <main className="flex-grow pt-16">
         <Hero />
         <Features />
         <Pricing />
