@@ -7,22 +7,15 @@ export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions);
 
-    // Add detailed session debugging
-    console.log('Session debug:', {
-      exists: !!session,
-      userId: session?.user?.id,
-      email: session?.user?.email,
-      status: session ? 'active' : 'missing',
+    // Add more detailed logging for production debugging
+    console.log('Validation request received:', {
+      hasSession: !!session,
+      hasUserId: !!session?.user?.id,
+      timestamp: new Date().toISOString(),
+      environment: process.env.NODE_ENV,
     });
 
     if (!session?.user?.id) {
-      console.log('Authentication failed:', {
-        reason: !session ? 'No session' : 'No user ID in session',
-        sessionData: session
-          ? 'Session exists but incomplete'
-          : 'No session data',
-      });
-
       return NextResponse.json(
         { error: 'Unauthorized - No valid session found' },
         { status: 401 }
@@ -30,10 +23,12 @@ export async function POST(request: Request) {
     }
 
     const { apiKey } = await request.json();
-    console.log('Received API key validation request:', {
-      userId: session.user.id,
+
+    // Add API key debug logging
+    console.log('API Key validation attempt:', {
       keyLength: apiKey?.length,
-      hasKey: !!apiKey,
+      userId: session.user.id,
+      timestamp: new Date().toISOString(),
     });
 
     const supabase = createClient(true);
@@ -46,42 +41,25 @@ export async function POST(request: Request) {
       .single();
 
     if (error) {
-      console.log('Supabase query error:', {
+      console.error('Supabase query error:', {
         error: error.message,
         code: error.code,
         details: error.details,
       });
-    }
-
-    if (error || !data) {
       return NextResponse.json(
-        { error: 'Invalid API key', details: error?.message },
+        { error: 'Invalid API key', details: error.message },
         { status: 400 }
       );
     }
 
-    console.log('API key validation successful:', {
-      foundUserId: data.user_id,
-      matchesSession: data.user_id === session.user.id,
-    });
-
-    // Return validation result
     return NextResponse.json({
       isValid: true,
       userId: data.user_id,
     });
   } catch (error) {
-    console.error('Error validating API key:', {
-      error: error instanceof Error ? error.message : 'Unknown error',
-      type: error instanceof Error ? error.constructor.name : typeof error,
-      stack: error instanceof Error ? error.stack : 'No stack trace',
-    });
-
+    console.error('Validation error:', error);
     return NextResponse.json(
-      {
-        error: 'Internal server error',
-        details: error instanceof Error ? error.message : 'Unknown error',
-      },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }

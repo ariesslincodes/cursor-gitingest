@@ -33,6 +33,7 @@ export const config = {
   matcher: [
     '/api/api-keys/:function*',
     '/api/validate-key',
+    '/api/github-summarizer',
     '/dashboards/:path*',
     '/playground/:path*',
     '/github-summarizer/:path*',

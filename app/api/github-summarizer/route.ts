@@ -48,13 +48,21 @@ export async function POST(request: Request) {
     const authHeader = request.headers.get('authorization');
     if (!authHeader?.startsWith('Bearer ')) {
       return NextResponse.json(
-        { error: 'Invalid or missing API key' },
+        { error: 'Invalid or missing API key format' },
         { status: 401 }
       );
     }
     const token = authHeader.split(' ')[1];
 
-    // Validate the API key using the validate endpoint directly
+    // Add validation request debugging
+    console.log('GitHub Summarizer API key validation:', {
+      hasToken: !!token,
+      tokenLength: token?.length,
+      timestamp: new Date().toISOString(),
+      environment: process.env.NODE_ENV,
+    });
+
+    // Validate the API key using the validate endpoint
     const validateResponse = await fetch(
       new URL('/api/api-keys/validate', request.url),
       {
@@ -67,7 +75,16 @@ export async function POST(request: Request) {
     );
 
     if (!validateResponse.ok) {
-      return NextResponse.json({ error: 'Invalid API key' }, { status: 401 });
+      const errorData = await validateResponse.json();
+      console.error('API key validation failed:', {
+        status: validateResponse.status,
+        error: errorData,
+        timestamp: new Date().toISOString(),
+      });
+      return NextResponse.json(
+        { error: errorData.error || 'Invalid API key' },
+        { status: validateResponse.status }
+      );
     }
 
     // Parse request body
