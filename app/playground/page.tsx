@@ -12,6 +12,7 @@ export default function PlaygroundPage() {
   const { status } = useSession();
   const [apiKey, setApiKey] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
   // Show loading state while checking session
@@ -36,6 +37,7 @@ export default function PlaygroundPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setError(null);
 
     try {
       const response = await fetch('/api/validate-key', {
@@ -50,13 +52,17 @@ export default function PlaygroundPage() {
 
       if (response.ok) {
         showToast('API key validated successfully', 'success');
-        router.push('/protected');
+        window.location.href = ROUTES.PROTECTED;
       } else {
-        showToast(data.error || 'Invalid API key', 'error');
+        const errorMessage = data.error || 'Invalid API key';
+        setError(errorMessage);
+        showToast(errorMessage, 'error');
       }
     } catch (err) {
       console.error('Error validating API key:', err);
-      showToast('Error validating API key', 'error');
+      const errorMessage = 'Failed to validate API key';
+      setError(errorMessage);
+      showToast(errorMessage, 'error');
     } finally {
       setIsLoading(false);
     }
@@ -111,20 +117,32 @@ export default function PlaygroundPage() {
                 id="apiKey"
                 value={apiKey}
                 onChange={(e) => setApiKey(e.target.value)}
-                className="w-full bg-[#2A2A2A] border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={`w-full bg-[#2A2A2A] border ${
+                  apiKey.length > 0 ? 'border-blue-500' : 'border-gray-700'
+                } rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500`}
                 placeholder="Enter your API key"
                 required
+                disabled={isLoading}
               />
+              <p className="mt-1 text-sm text-gray-400">
+                Enter your API key to validate and check usage limits
+              </p>
             </div>
             <button
               type="submit"
-              disabled={isLoading}
+              disabled={isLoading || !apiKey.trim()}
               className="px-4 py-2 bg-white text-black rounded-lg hover:bg-gray-200 disabled:bg-gray-600 disabled:text-gray-400 disabled:cursor-not-allowed text-sm font-medium transition-colors"
             >
               {isLoading ? 'Validating...' : 'Validate Key'}
             </button>
           </form>
         </div>
+
+        {error && (
+          <div className="bg-red-900/50 border border-red-700 rounded-lg p-4 mt-4 text-red-200">
+            {error}
+          </div>
+        )}
       </div>
     </div>
   );

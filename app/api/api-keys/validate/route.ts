@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../../auth/[...nextauth]/options';
-import { createClient } from '@/lib/supabase';
+import { apiKeyService } from '@/app/services/apiKeys';
 
 // POST /api/api-keys/validate - Validate an API key
 export async function POST(request: NextRequest) {
@@ -10,51 +10,39 @@ export async function POST(request: NextRequest) {
 
     if (!session?.user?.id) {
       return NextResponse.json(
-        { error: 'Unauthorized', isValid: false },
+        { error: 'Unauthorized access' },
         { status: 401 }
       );
     }
 
-    const { key } = await request.json();
+    const body = await request.json();
+    const { key } = body;
 
-    if (!key || typeof key !== 'string' || key.length < 32) {
+    if (!key) {
       return NextResponse.json(
-        { error: 'Invalid API key format', isValid: false },
+        { error: 'API key is required' },
         { status: 400 }
       );
     }
 
-    const supabase = createClient(true);
+    const validationResult = await apiKeyService.validateApiKeyWithUsage(key);
 
-    const { data, error } = await supabase
-      .from('api_keys')
-      .select('user_id')
-      .eq('key', key)
-      .single();
-
-    if (error || !data) {
+    if (!validationResult.isValid) {
       return NextResponse.json(
-        { error: 'Invalid API key', isValid: false },
-        { status: 400 }
-      );
-    }
-
-    // Verify the key belongs to the current user
-    if (data.user_id !== session.user.id) {
-      return NextResponse.json(
-        { error: 'API key does not belong to current user', isValid: false },
-        { status: 403 }
+        { error: validationResult.error || 'Invalid API key' },
+        { status: validationResult.status || 401 }
       );
     }
 
     return NextResponse.json({
       isValid: true,
-      userId: data.user_id,
+      usage: validationResult.keyData?.usage,
+      limit: validationResult.keyData?.monthly_limit,
     });
   } catch (error) {
     console.error('API key validation error:', error);
     return NextResponse.json(
-      { error: 'Internal server error', isValid: false },
+      { error: 'Failed to validate API key' },
       { status: 500 }
     );
   }

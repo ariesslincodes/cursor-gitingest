@@ -98,6 +98,33 @@ export const apiKeyService = {
     }
   },
 
+  async validateKey(
+    key: string
+  ): Promise<{ isValid: boolean; error?: string }> {
+    try {
+      const response = await fetch('/api/api-keys/validate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ key }),
+      });
+
+      const data = await response.json();
+      return {
+        isValid: response.ok,
+        error: !response.ok ? data.error : undefined,
+      };
+    } catch (error) {
+      console.error('API key validation error:', error);
+      return {
+        isValid: false,
+        error:
+          error instanceof Error ? error.message : 'Failed to validate API key',
+      };
+    }
+  },
+
   async validateApiKeyWithUsage(
     apiKey: string
   ): Promise<ApiKeyValidationResult> {

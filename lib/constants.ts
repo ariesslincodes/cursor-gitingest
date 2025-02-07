@@ -7,4 +7,5 @@ export const ROUTES = {
   DASHBOARD: '/dashboards',
   PLAYGROUND: '/playground',
   GITHUB: '/github-summarizer',
+  PROTECTED: '/protected',
 } as const;
