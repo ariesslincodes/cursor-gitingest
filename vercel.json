@@ -1,0 +1,7 @@
+{
+  "functions": {
+    "app/api/github-summarizer/route.ts": {
+      "maxDuration": 60
+    }
+  }
+} 
