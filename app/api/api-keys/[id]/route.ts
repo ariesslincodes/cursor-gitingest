@@ -12,16 +12,18 @@ async function checkAuth(req: NextRequest) {
   return token.sub;
 }
 
+type Params = { id: string };
+
 // PUT /api/api-keys/[id] - Update an API key
 export async function PUT(
-  req: NextRequest,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  { params }: { params: Params }
 ) {
-  const userId = await checkAuth(req);
+  const userId = await checkAuth(request);
   if (userId instanceof NextResponse) return userId;
 
   try {
-    const data = await req.json();
+    const data = await request.json();
     const supabase = createClient(true);
     const { error } = await supabase
       .from('api_keys')
@@ -45,10 +47,10 @@ export async function PUT(
 
 // DELETE /api/api-keys/[id] - Delete an API key
 export async function DELETE(
-  req: NextRequest,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  { params }: { params: Params }
 ) {
-  const userId = await checkAuth(req);
+  const userId = await checkAuth(request);
   if (userId instanceof NextResponse) return userId;
 
   try {
