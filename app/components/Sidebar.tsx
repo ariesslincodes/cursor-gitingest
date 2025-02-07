@@ -7,10 +7,13 @@ import {
   BookOpenIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
+  ArrowRightOnRectangleIcon,
 } from '@heroicons/react/24/outline';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { ROUTES } from '@/lib/constants';
+import { useSession, signOut } from 'next-auth/react';
+import Image from 'next/image';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -19,6 +22,7 @@ interface SidebarProps {
 
 export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
+  const { data: session } = useSession();
   const isActive = (path: string) => pathname === path;
 
   return (
@@ -29,6 +33,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
         transition-all duration-300 ease-in-out
         ${isOpen ? 'translate-x-0 w-[280px]' : '-translate-x-full w-0 lg:w-0'}
         z-40
+        flex flex-col
       `}
     >
       {/* Toggle button for desktop */}
@@ -45,7 +50,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
         )}
       </button>
 
-      <div className="px-6 py-4 h-full overflow-y-auto">
+      <div className="px-6 py-4 h-full overflow-y-auto flex flex-col">
         {/* Logo */}
         <div className="p-6 mt-8">
           <h1 className="text-2xl font-bold text-white">SuperCur</h1>
@@ -154,6 +159,43 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
             </div>
           </div>
         </nav>
+
+        {/* User Profile Section - at the bottom */}
+        {session?.user && (
+          <div className="mt-auto border-t border-gray-800 pt-4 mb-4">
+            <div className="flex items-center gap-3 px-4 py-2 rounded-lg">
+              {session.user.image ? (
+                <div className="relative w-10 h-10 rounded-full overflow-hidden">
+                  <Image
+                    src={session.user.image}
+                    alt={session.user.name || 'User'}
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+              ) : (
+                <div className="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center">
+                  <UserIcon className="w-6 h-6 text-gray-300" />
+                </div>
+              )}
+              <div className="flex flex-col">
+                <span className="text-sm font-medium text-white">
+                  {session.user.name || 'User'}
+                </span>
+                <span className="text-xs text-gray-400">
+                  {session.user.email}
+                </span>
+              </div>
+            </div>
+            <button
+              onClick={() => signOut()}
+              className="w-full mt-2 flex items-center gap-2 px-4 py-2 text-gray-400 hover:bg-[#2A2A2A] hover:text-white rounded-lg transition-colors"
+            >
+              <ArrowRightOnRectangleIcon className="w-5 h-5" />
+              <span>Sign Out</span>
+            </button>
+          </div>
+        )}
       </div>
     </aside>
   );
