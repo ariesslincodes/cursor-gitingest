@@ -12,15 +12,16 @@ async function checkAuth(req: NextRequest) {
   return token.sub;
 }
 
-type Params = { id: string };
-
 // PUT /api/api-keys/[id] - Update an API key
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: Params }
-) {
+export async function PUT(request: NextRequest) {
   const userId = await checkAuth(request);
   if (userId instanceof NextResponse) return userId;
+
+  // Get id from URL path segments
+  const id = request.nextUrl.pathname.split('/').pop();
+  if (!id) {
+    return NextResponse.json({ error: 'Missing API key ID' }, { status: 400 });
+  }
 
   try {
     const data = await request.json();
@@ -28,7 +29,7 @@ export async function PUT(
     const { error } = await supabase
       .from('api_keys')
       .update(data)
-      .eq('id', params.id)
+      .eq('id', id)
       .eq('user_id', userId);
 
     if (error) {
@@ -46,19 +47,22 @@ export async function PUT(
 }
 
 // DELETE /api/api-keys/[id] - Delete an API key
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Params }
-) {
+export async function DELETE(request: NextRequest) {
   const userId = await checkAuth(request);
   if (userId instanceof NextResponse) return userId;
+
+  // Get id from URL path segments
+  const id = request.nextUrl.pathname.split('/').pop();
+  if (!id) {
+    return NextResponse.json({ error: 'Missing API key ID' }, { status: 400 });
+  }
 
   try {
     const supabase = createClient(true);
     const { error } = await supabase
       .from('api_keys')
       .delete()
-      .eq('id', params.id)
+      .eq('id', id)
       .eq('user_id', userId);
 
     if (error) {
