@@ -3,12 +3,6 @@ import { createClient } from '@/lib/supabase';
 import { getToken } from 'next-auth/jwt';
 import { PostgrestError } from '@supabase/supabase-js';
 
-interface RequestContext {
-  params: {
-    id: string;
-  };
-}
-
 // Middleware to check authentication
 async function checkAuth(req: NextRequest) {
   const token = await getToken({ req });
@@ -19,17 +13,20 @@ async function checkAuth(req: NextRequest) {
 }
 
 // PUT /api/api-keys/[id] - Update an API key
-export async function PUT(req: NextRequest, context: RequestContext) {
-  const userId = await checkAuth(req);
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  const userId = await checkAuth(request);
   if (userId instanceof NextResponse) return userId;
 
   try {
-    const data = await req.json();
+    const data = await request.json();
     const supabase = createClient(true);
     const { error } = await supabase
       .from('api_keys')
       .update(data)
-      .eq('id', context.params.id)
+      .eq('id', params.id)
       .eq('user_id', userId);
 
     if (error) {
@@ -47,8 +44,11 @@ export async function PUT(req: NextRequest, context: RequestContext) {
 }
 
 // DELETE /api/api-keys/[id] - Delete an API key
-export async function DELETE(req: NextRequest, context: RequestContext) {
-  const userId = await checkAuth(req);
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  const userId = await checkAuth(request);
   if (userId instanceof NextResponse) return userId;
 
   try {
@@ -56,7 +56,7 @@ export async function DELETE(req: NextRequest, context: RequestContext) {
     const { error } = await supabase
       .from('api_keys')
       .delete()
-      .eq('id', context.params.id)
+      .eq('id', params.id)
       .eq('user_id', userId);
 
     if (error) {
