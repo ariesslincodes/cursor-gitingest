@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { apiKeyService } from '@/app/services/apiKeys';
 import { getServerSession } from 'next-auth/next';
-import { authOptions } from '../../auth/[...nextauth]/route';
+import { authOptions } from '../../auth/[...nextauth]/options';
 
 // POST /api/api-keys/validate - Validate an API key
 export async function POST(request: NextRequest) {
