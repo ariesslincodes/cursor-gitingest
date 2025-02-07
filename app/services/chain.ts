@@ -162,7 +162,9 @@ For cool facts, make sure each fact is unique and interesting, with a clear titl
   });
 
   const response = await chatModel.invoke([new HumanMessage(formattedPrompt)]);
-  const parsed = await parser.parse(response.content);
+  // Convert the response content to string before parsing
+  const responseText = response.content.toString();
+  const parsed = await parser.parse(responseText);
 
   return {
     ...parsed,
