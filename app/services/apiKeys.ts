@@ -1,71 +1,114 @@
-import { createClient } from '@supabase/supabase-js';
+import { ApiKey } from '@/types/api';
+import { getSession } from 'next-auth/react';
 
-// Single instance of Supabase client
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
-
-export interface ApiKey {
-  id: string;
+export interface UpdateApiKeyData {
   name: string;
-  key: string;
-  created_at: string;
   monthly_limit?: number;
-  usage: number;
 }
 
-interface UpdateApiKeyData {
-  name: string;
-  // other fields...
-}
+export type { ApiKey };
 
 export const apiKeyService = {
-  async fetchApiKeys() {
-    const { data, error } = await supabase
-      .from('api_keys')
-      .select('*')
-      .order('created_at', { ascending: false });
+  async fetchApiKeys(): Promise<ApiKey[]> {
+    await getSession();
 
-    if (error) throw error;
-    return data;
+    try {
+      const response = await fetch('/api/api-keys', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to fetch API keys');
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      throw error;
+    }
   },
 
-  async createApiKey(name: string = 'API Key'): Promise<string> {
-    const key = `sk_${crypto.randomUUID()}`;
-    const { error } = await supabase.from('api_keys').insert([
-      {
-        key: key,
-        name: name,
-        usage: 0,
-        monthly_limit: 1000, // Optional: set a default limit
+  async createApiKey(name: string): Promise<string> {
+    const session = await getSession();
+    if (!session) throw new Error('No active session');
+
+    const response = await fetch('/api/api-keys', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
       },
-    ]);
+      body: JSON.stringify({ name }),
+    });
 
-    if (error) throw error;
-    return key;
+    if (!response.ok) {
+      throw new Error('Failed to create API key');
+    }
+
+    const data = await response.json();
+    return data.key;
   },
 
-  async updateApiKey(id: string, data: UpdateApiKeyData) {
-    const { error } = await supabase.from('api_keys').update(data).eq('id', id);
+  async updateApiKey(id: string, data: UpdateApiKeyData): Promise<void> {
+    const session = await getSession();
+    if (!session) throw new Error('No active session');
 
-    if (error) throw error;
+    const requestConfig = {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'same-origin' as const,
+      body: JSON.stringify(data),
+    };
+
+    const response = await fetch(`/api/api-keys/${id}`, requestConfig);
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || 'Failed to update API key');
+    }
   },
 
-  async deleteApiKey(id: string) {
-    const { error } = await supabase.from('api_keys').delete().eq('id', id);
+  async deleteApiKey(id: string): Promise<void> {
+    const session = await getSession();
+    if (!session) throw new Error('No active session');
 
-    if (error) throw error;
+    const requestConfig = {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'same-origin' as const,
+    };
+
+    const response = await fetch(`/api/api-keys/${id}`, requestConfig);
+
+    if (!response.ok) {
+      throw new Error('Failed to delete API key');
+    }
   },
 
   async validateApiKey(key: string): Promise<boolean> {
-    const { data, error } = await supabase
-      .from('api_keys')
-      .select('*')
-      .eq('key', key)
-      .single();
+    const session = await getSession();
+    if (!session) throw new Error('No active session');
 
-    if (error) return false;
-    return !!data;
+    const response = await fetch('/api/api-keys/validate', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ key }),
+    });
+
+    if (!response.ok) {
+      return false;
+    }
+
+    const data = await response.json();
+    return data.isValid;
   },
 };

@@ -39,8 +39,7 @@ export function EditApiKeyModal({
       onSuccess();
       onClose();
       showToast('API key updated successfully', 'success');
-    } catch (error) {
-      console.error('Failed to update API key:', error);
+    } catch {
       onError();
       showToast('Failed to update API key', 'error');
     } finally {

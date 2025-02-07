@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { apiKeyService } from '@/app/services/apiKeys';
 import { Sidebar } from '@/app/components/Sidebar';
 import { Header } from '@/app/components/dashboard/Header';
@@ -11,15 +11,7 @@ import { useRouter } from 'next/navigation';
 import { Providers } from '@/app/providers';
 import { Toast } from '@/app/components/Toast';
 import { Menu } from 'lucide-react';
-
-interface ApiKey {
-  id: string;
-  name: string;
-  key: string;
-  created_at: string;
-  usage: number;
-  monthly_limit?: number;
-}
+import { ApiKey } from '@/types/api';
 
 interface ToastInfo {
   message: string;
@@ -35,20 +27,26 @@ export default function DashboardsPage() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [toast, setToast] = useState<ToastInfo | null>(null);
 
-  const fetchApiKeys = async () => {
+  const fetchApiKeys = useCallback(async () => {
     try {
+      if (!session) {
+        setError('No active session');
+        return;
+      }
       const data = await apiKeyService.fetchApiKeys();
       setApiKeys(data);
+      setError(null);
     } catch (err) {
-      console.error('Error fetching API keys:', err);
-      setError('Failed to fetch API keys');
+      setError(err instanceof Error ? err.message : 'Failed to fetch API keys');
     }
-  };
+  }, [session]);
 
   useEffect(() => {
-    fetchApiKeys();
+    if (session) {
+      fetchApiKeys();
+    }
     setIsClient(true);
-  }, []);
+  }, [session, fetchApiKeys]);
 
   const handleToast = (message: string, type: 'success' | 'error') => {
     setToast({ message, type });

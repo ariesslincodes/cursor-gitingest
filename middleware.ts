@@ -18,11 +18,10 @@ export default withAuth(
 // Protect these routes - require authentication
 export const config = {
   matcher: [
+    '/api/api-keys/:function*',
     '/dashboards/:path*',
     '/playground/:path*',
     '/github-summarizer/:path*',
     '/protected/:path*',
-    '/api/validate-key/:path*',
-    '/api/github-summarizer/:path*',
   ],
 };
