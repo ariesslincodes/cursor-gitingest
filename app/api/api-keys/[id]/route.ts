@@ -12,14 +12,11 @@ async function checkAuth(req: NextRequest) {
   return token.sub;
 }
 
-type RouteContext = {
-  params: {
-    id: string;
-  };
-};
-
 // PUT /api/api-keys/[id] - Update an API key
-export async function PUT(request: NextRequest, { params }: RouteContext) {
+export async function PUT(
+  request: NextRequest,
+  context: { params: { id: string } }
+) {
   const userId = await checkAuth(request);
   if (userId instanceof NextResponse) return userId;
 
@@ -29,7 +26,7 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
     const { error } = await supabase
       .from('api_keys')
       .update(data)
-      .eq('id', params.id)
+      .eq('id', context.params.id)
       .eq('user_id', userId);
 
     if (error) {
@@ -47,7 +44,10 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
 }
 
 // DELETE /api/api-keys/[id] - Delete an API key
-export async function DELETE(request: NextRequest, { params }: RouteContext) {
+export async function DELETE(
+  request: NextRequest,
+  context: { params: { id: string } }
+) {
   const userId = await checkAuth(request);
   if (userId instanceof NextResponse) return userId;
 
@@ -56,7 +56,7 @@ export async function DELETE(request: NextRequest, { params }: RouteContext) {
     const { error } = await supabase
       .from('api_keys')
       .delete()
-      .eq('id', params.id)
+      .eq('id', context.params.id)
       .eq('user_id', userId);
 
     if (error) {
