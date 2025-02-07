@@ -7,7 +7,7 @@ export default function Hero() {
     <section className="relative py-20">
       <div className="container mx-auto px-4">
         <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-4xl md:text-6xl font-bold tracking-tighter">
+          <h1 className="text-4xl md:text-6xl font-bold tracking-tighter mb-8">
             <span className="bg-gradient-to-r from-[#60A5FA] via-[#3B82F6] to-[#38BDF8] text-transparent bg-clip-text">
               Supercharge Your GitHub
             </span>
