@@ -10,7 +10,7 @@
     "prepare": "husky install"
   },
   "dependencies": {
-    "@auth/core": "^0.37.4",
+    "@auth/core": "0.34.2",
     "@auth/supabase-adapter": "^1.7.4",
     "@heroicons/react": "^2.2.0",
     "@langchain/core": "^0.3.38",
