@@ -92,7 +92,9 @@ export const apiKeyService = {
     }
   },
 
-  async validateApiKey(key: string): Promise<boolean> {
+  async validateApiKey(
+    key: string
+  ): Promise<{ isValid: boolean; userId?: string }> {
     const session = await getSession();
     if (!session) throw new Error('No active session');
 
@@ -105,10 +107,10 @@ export const apiKeyService = {
     });
 
     if (!response.ok) {
-      return false;
+      return { isValid: false };
     }
 
     const data = await response.json();
-    return data.isValid;
+    return data;
   },
 };

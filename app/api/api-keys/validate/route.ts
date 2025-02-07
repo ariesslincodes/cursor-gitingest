@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { apiKeyService } from '@/app/services/apiKeys';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../../auth/[...nextauth]/options';
+import { createClient } from '@supabase/supabase-js';
 
 // POST /api/api-keys/validate - Validate an API key
 export async function POST(request: NextRequest) {
@@ -13,14 +13,24 @@ export async function POST(request: NextRequest) {
 
   try {
     const { key } = await request.json();
-    const validation = await apiKeyService.validateApiKey(key);
+    const supabase = createClient(true);
 
-    // For authenticated requests, also verify the API key belongs to the user
-    if (validation.isValid && validation.userId !== session.user.id) {
+    // Check if the API key exists and belongs to the user
+    const { data, error } = await supabase
+      .from('api_keys')
+      .select('user_id')
+      .eq('key', key)
+      .single();
+
+    if (error || !data) {
       return NextResponse.json({ isValid: false });
     }
 
-    return NextResponse.json({ isValid: validation.isValid });
+    // Return validation result with user ID for ownership check
+    return NextResponse.json({
+      isValid: true,
+      userId: data.user_id,
+    });
   } catch (error: unknown) {
     const message =
       error instanceof Error ? error.message : 'Failed to validate API key';
