@@ -189,10 +189,10 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
             </div>
             <button
               onClick={() => signOut()}
-              className="w-full mt-2 flex items-center gap-2 px-4 py-2 text-gray-400 hover:bg-[#2A2A2A] hover:text-white rounded-lg transition-colors"
+              className="w-full mt-2 flex items-center gap-2 px-4 py-2.5 text-white bg-red-500/20 hover:bg-red-500 rounded-lg transition-all duration-200 border border-red-400/30 hover:border-red-400"
             >
               <ArrowRightOnRectangleIcon className="w-5 h-5" />
-              <span>Sign Out</span>
+              <span className="font-medium">Sign Out</span>
             </button>
           </div>
         )}
