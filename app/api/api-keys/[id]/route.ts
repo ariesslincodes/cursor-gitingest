@@ -3,6 +3,12 @@ import { createClient } from '@/lib/supabase';
 import { getToken } from 'next-auth/jwt';
 import { PostgrestError } from '@supabase/supabase-js';
 
+interface RequestContext {
+  params: {
+    id: string;
+  };
+}
+
 // Middleware to check authentication
 async function checkAuth(req: NextRequest) {
   const token = await getToken({ req });
@@ -13,10 +19,7 @@ async function checkAuth(req: NextRequest) {
 }
 
 // PUT /api/api-keys/[id] - Update an API key
-export async function PUT(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function PUT(req: NextRequest, context: RequestContext) {
   const userId = await checkAuth(req);
   if (userId instanceof NextResponse) return userId;
 
@@ -26,7 +29,7 @@ export async function PUT(
     const { error } = await supabase
       .from('api_keys')
       .update(data)
-      .eq('id', params.id)
+      .eq('id', context.params.id)
       .eq('user_id', userId);
 
     if (error) {
@@ -44,10 +47,7 @@ export async function PUT(
 }
 
 // DELETE /api/api-keys/[id] - Delete an API key
-export async function DELETE(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(req: NextRequest, context: RequestContext) {
   const userId = await checkAuth(req);
   if (userId instanceof NextResponse) return userId;
 
@@ -56,7 +56,7 @@ export async function DELETE(
     const { error } = await supabase
       .from('api_keys')
       .delete()
-      .eq('id', params.id)
+      .eq('id', context.params.id)
       .eq('user_id', userId);
 
     if (error) {
