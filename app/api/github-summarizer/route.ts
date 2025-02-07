@@ -67,16 +67,21 @@ export async function POST(request: Request) {
 
       console.log('Fetching repository data:', { owner, repo });
 
-      // Fetch repository data
-      const repoResponse = await fetch(
-        `https://api.github.com/repos/${owner}/${repo}`,
-        {
+      // Fetch repository data and README content in parallel
+      const [repoResponse, readmeResponse] = await Promise.all([
+        fetch(`https://api.github.com/repos/${owner}/${repo}`, {
           headers: {
             Accept: 'application/vnd.github.v3+json',
             'User-Agent': 'SuperCur-App',
           },
-        }
-      );
+        }),
+        fetch(`https://api.github.com/repos/${owner}/${repo}/readme`, {
+          headers: {
+            Accept: 'application/vnd.github.v3.raw',
+            'User-Agent': 'SuperCur-App',
+          },
+        }),
+      ]);
 
       if (!repoResponse.ok) {
         throw new Error(
@@ -84,22 +89,11 @@ export async function POST(request: Request) {
         );
       }
 
-      const repoData = await repoResponse.json();
-
-      // Fetch README content
-      const readmeResponse = await fetch(
-        `https://api.github.com/repos/${owner}/${repo}/readme`,
-        {
-          headers: {
-            Accept: 'application/vnd.github.v3.raw',
-            'User-Agent': 'SuperCur-App',
-          },
-        }
-      );
-
       if (!readmeResponse.ok) {
         throw new Error('Failed to fetch README');
       }
+
+      const repoData = await repoResponse.json();
 
       // Generate summary using the chain
       const summary = await chain({
