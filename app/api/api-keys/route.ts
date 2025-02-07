@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
           key,
           name,
           usage: 0,
-          monthly_limit: 1000,
+          monthly_limit: 20,
           user_id: token.sub,
         },
       ])

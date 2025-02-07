@@ -1,47 +1,6 @@
 import { chain } from '@/app/services/chain';
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase';
-
-// Helper function to extract repository info from GitHub URL
-// async function parseGithubUrl(url: string) {
-//   try {
-//     const urlObj = new URL(url);
-//     if (!urlObj.hostname.includes('github.com')) {
-//       throw new Error('Not a GitHub URL');
-//     }
-
-//     // Remove any trailing slashes and split the pathname
-//     const parts = urlObj.pathname.replace(/^\/|\/$/g, '').split('/');
-
-//     if (parts.length < 2) {
-//       throw new Error('Invalid GitHub URL format: missing owner or repository');
-//     }
-
-//     const [owner, repo] = parts;
-//     console.log('Parsed GitHub URL:', { owner, repo }); // Add logging
-
-//     // Fetch README content from GitHub API
-//     const readmeUrl = `https://api.github.com/repos/${owner}/${repo}/readme`;
-//     const response = await fetch(readmeUrl);
-
-//     if (!response.ok) {
-//       console.error(
-//         'Failed to fetch README:',
-//         response.status,
-//         response.statusText
-//       );
-//       throw new Error('Failed to fetch README');
-//     }
-
-//     const data = await response.json();
-//     const readmeContent = Buffer.from(data.content, 'base64').toString('utf-8');
-
-//     return { owner, repo, readmeContent };
-//   } catch (error) {
-//     console.error('GitHub URL parsing error:', error);
-//     throw new Error('Invalid GitHub URL format');
-//   }
-// }
+import { apiKeyService } from '@/app/services/apiKeys';
 
 export async function POST(request: Request) {
   try {
@@ -54,23 +13,25 @@ export async function POST(request: Request) {
     }
     const token = authHeader.split(' ')[1];
 
-    // Use server-side validation directly
-    const supabase = createClient(true);
+    // First validate the API key
+    const validationResult = await apiKeyService.validateApiKeyWithUsage(token);
+    if (!validationResult.isValid) {
+      return NextResponse.json(
+        { error: validationResult.error },
+        { status: validationResult.status }
+      );
+    }
 
-    // Check if the API key exists and is valid
-    const { data: keyData, error: keyError } = await supabase
-      .from('api_keys')
-      .select('user_id') // Remove active field since it doesn't exist
-      .eq('key', token)
-      .single();
-
-    if (keyError || !keyData) {
-      console.error('API key validation failed:', {
-        error: keyError?.message || 'Invalid key',
-        timestamp: new Date().toISOString(),
-      });
-
-      return NextResponse.json({ error: 'Invalid API key' }, { status: 401 });
+    // Then check and increment usage
+    const rateLimitResult = await apiKeyService.checkAndIncrementUsage(
+      token,
+      validationResult.keyData!
+    );
+    if (!rateLimitResult.allowed) {
+      return NextResponse.json(
+        { error: rateLimitResult.error },
+        { status: rateLimitResult.status }
+      );
     }
 
     // Parse request body

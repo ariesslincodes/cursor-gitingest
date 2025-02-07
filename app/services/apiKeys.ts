@@ -1,8 +1,26 @@
 import { ApiKey } from '@/types/api';
+import { createClient } from '@/lib/supabase';
 
 export interface UpdateApiKeyData {
   name: string;
   monthly_limit?: number;
+}
+
+interface ApiKeyValidationResult {
+  isValid: boolean;
+  error?: string;
+  status?: number;
+  keyData?: {
+    user_id: string;
+    usage: number;
+    monthly_limit: number;
+  };
+}
+
+interface RateLimitCheckResult {
+  allowed: boolean;
+  error?: string;
+  status?: number;
 }
 
 export type { ApiKey };
@@ -80,22 +98,78 @@ export const apiKeyService = {
     }
   },
 
-  async validateApiKey(
-    key: string
-  ): Promise<{ isValid: boolean; userId?: string }> {
-    const response = await fetch('/api/api-keys/validate', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ key }),
-    });
+  async validateApiKeyWithUsage(
+    apiKey: string
+  ): Promise<ApiKeyValidationResult> {
+    const supabase = createClient(true);
 
-    if (!response.ok) {
-      return { isValid: false };
+    const { data: keyData, error: keyError } = await supabase
+      .from('api_keys')
+      .select('user_id, usage, monthly_limit')
+      .eq('key', apiKey)
+      .single();
+
+    if (keyError || !keyData) {
+      return {
+        isValid: false,
+        error: 'Invalid or expired API key',
+        status: 401,
+      };
     }
 
-    const data = await response.json();
-    return data;
+    return {
+      isValid: true,
+      keyData,
+    };
+  },
+
+  async checkAndIncrementUsage(
+    apiKey: string,
+    keyData: { usage: number; monthly_limit: number }
+  ): Promise<RateLimitCheckResult> {
+    // Check if usage is within limits
+    if (keyData.usage >= keyData.monthly_limit) {
+      return {
+        allowed: false,
+        error: `Rate limit exceeded. Usage: ${keyData.usage}/${keyData.monthly_limit} requests this month`,
+        status: 429,
+      };
+    }
+
+    // Increment usage
+    const supabase = createClient(true);
+    const { error: updateError } = await supabase
+      .from('api_keys')
+      .update({ usage: keyData.usage + 1 })
+      .eq('key', apiKey);
+
+    if (updateError) {
+      return {
+        allowed: false,
+        error: 'Failed to update API key usage',
+        status: 500,
+      };
+    }
+
+    return {
+      allowed: true,
+    };
+  },
+
+  // Combined function for convenience
+  async checkAndIncrementRateLimit(
+    apiKey: string
+  ): Promise<RateLimitCheckResult> {
+    const validationResult = await this.validateApiKeyWithUsage(apiKey);
+
+    if (!validationResult.isValid) {
+      return {
+        allowed: false,
+        error: validationResult.error,
+        status: validationResult.status,
+      };
+    }
+
+    return this.checkAndIncrementUsage(apiKey, validationResult.keyData!);
   },
 };
