@@ -15,7 +15,7 @@ async function checkAuth(req: NextRequest) {
 // PUT /api/api-keys/[id] - Update an API key
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
   const userId = await checkAuth(request);
   if (userId instanceof NextResponse) return userId;
@@ -26,7 +26,7 @@ export async function PUT(
     const { error } = await supabase
       .from('api_keys')
       .update(data)
-      .eq('id', params.id)
+      .eq('id', context.params.id)
       .eq('user_id', userId);
 
     if (error) {
@@ -46,7 +46,7 @@ export async function PUT(
 // DELETE /api/api-keys/[id] - Delete an API key
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
   const userId = await checkAuth(request);
   if (userId instanceof NextResponse) return userId;
@@ -56,7 +56,7 @@ export async function DELETE(
     const { error } = await supabase
       .from('api_keys')
       .delete()
-      .eq('id', params.id)
+      .eq('id', context.params.id)
       .eq('user_id', userId);
 
     if (error) {
