@@ -24,7 +24,7 @@ export default function DashboardsPage() {
   const [apiKeys, setApiKeys] = useState<ApiKey[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isClient, setIsClient] = useState(false);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [toast, setToast] = useState<ToastInfo | null>(null);
 
   const fetchApiKeys = useCallback(async () => {
@@ -54,8 +54,13 @@ export default function DashboardsPage() {
     setTimeout(() => setToast(null), 3000);
   };
 
-  // Toggle sidebar
+  // Toggle sidebar for mobile
   const toggleSidebar = () => {
+    setIsSidebarOpen(!isSidebarOpen);
+  };
+
+  // Handle sidebar toggle for desktop
+  const handleSidebarToggle = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };
 
@@ -101,23 +106,17 @@ export default function DashboardsPage() {
           />
         )}
 
-        {/* Sidebar */}
-        <Sidebar
-          isOpen={isSidebarOpen}
-          onClose={() => setIsSidebarOpen(false)}
-        />
+        <Sidebar isOpen={isSidebarOpen} onClose={handleSidebarToggle} />
 
-        {/* Main content */}
         <main
           onClick={handleMainClick}
           className={`
             flex-1 w-full min-h-screen
             transition-all duration-300 ease-in-out
             px-4 py-24 lg:py-8 lg:px-8
-            ${isSidebarOpen ? 'lg:ml-[280px]' : 'lg:ml-0'}
           `}
         >
-          <div className="max-w-6xl mx-auto">
+          <div className="max-w-6xl">
             <Header
               title="Overview"
               breadcrumbs={['Pages', 'Overview']}

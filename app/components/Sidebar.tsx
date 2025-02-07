@@ -5,6 +5,8 @@ import {
   UserIcon,
   CodeBracketIcon,
   BookOpenIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
 } from '@heroicons/react/24/outline';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -15,7 +17,7 @@ interface SidebarProps {
   onClose?: () => void;
 }
 
-export function Sidebar({ isOpen }: SidebarProps) {
+export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
   const isActive = (path: string) => pathname === path;
 
@@ -23,12 +25,26 @@ export function Sidebar({ isOpen }: SidebarProps) {
     <aside
       className={`
         w-[280px] h-screen bg-[#0A0A0A] border-r border-gray-800 
-        fixed lg:sticky top-0 
-        transition-transform duration-300 ease-in-out
-        ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+        fixed lg:relative top-0 
+        transition-all duration-300 ease-in-out
+        ${isOpen ? 'translate-x-0 w-[280px]' : '-translate-x-full w-0 lg:w-0'}
         z-40
       `}
     >
+      {/* Toggle button for desktop */}
+      <button
+        onClick={onClose}
+        className="hidden lg:flex absolute -right-8 top-1/2 transform -translate-y-1/2 
+          bg-[#0A0A0A] border border-gray-800 rounded-r-md p-2 
+          text-gray-400 hover:text-white transition-colors"
+      >
+        {isOpen ? (
+          <ChevronLeftIcon className="w-4 h-4" />
+        ) : (
+          <ChevronRightIcon className="w-4 h-4" />
+        )}
+      </button>
+
       <div className="px-6 py-4 h-full overflow-y-auto">
         {/* Logo */}
         <div className="p-6 mt-8">

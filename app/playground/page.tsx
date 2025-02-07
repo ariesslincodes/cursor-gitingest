@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { ROUTES } from '@/lib/constants';
 import { Sidebar } from '../components/Sidebar';
+import { Menu } from 'lucide-react';
 
 export default function PlaygroundPage() {
   const { status } = useSession();
@@ -16,6 +17,23 @@ export default function PlaygroundPage() {
   const [error, setError] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const router = useRouter();
+
+  // Toggle sidebar for mobile
+  const toggleSidebar = () => {
+    setIsSidebarOpen(!isSidebarOpen);
+  };
+
+  // Handle sidebar toggle for desktop
+  const handleSidebarToggle = () => {
+    setIsSidebarOpen(!isSidebarOpen);
+  };
+
+  // Close sidebar when clicking outside on mobile
+  const handleMainClick = () => {
+    if (window.innerWidth < 1024 && isSidebarOpen) {
+      setIsSidebarOpen(false);
+    }
+  };
 
   // Show loading state while checking session
   if (status === 'loading') {
@@ -71,10 +89,34 @@ export default function PlaygroundPage() {
   };
 
   return (
-    <div className="flex min-h-screen bg-[#0A0A0A]">
-      <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+    <div className="flex min-h-screen bg-[#0A0A0A] relative">
+      {/* Mobile menu button */}
+      <button
+        onClick={toggleSidebar}
+        className="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-md bg-gray-800 text-white"
+        aria-label="Toggle menu"
+      >
+        <Menu className="h-6 w-6" />
+      </button>
 
-      <main className="flex-1 p-8">
+      {/* Overlay for mobile */}
+      {isSidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 lg:hidden z-30"
+          onClick={toggleSidebar}
+        />
+      )}
+
+      <Sidebar isOpen={isSidebarOpen} onClose={handleSidebarToggle} />
+
+      <main
+        onClick={handleMainClick}
+        className={`
+          flex-1 w-full min-h-screen
+          transition-all duration-300 ease-in-out
+          px-4 py-24 lg:py-8 lg:px-8
+        `}
+      >
         <Header
           title="API Playground"
           breadcrumbs={['Pages', 'API Playground']}
