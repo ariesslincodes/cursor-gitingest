@@ -29,7 +29,7 @@ export default function PlaygroundPage() {
 
   // If user is not logged in, redirect to home
   if (status === 'unauthenticated') {
-    router.push(ROUTES.LOGIN);
+    router.push(ROUTES.HOME);
     return null;
   }
 
