@@ -1,50 +1,50 @@
 import { chain } from '@/app/services/chain';
 import { NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase';
 
 // Helper function to extract repository info from GitHub URL
-async function parseGithubUrl(url: string) {
-  try {
-    const urlObj = new URL(url);
-    if (!urlObj.hostname.includes('github.com')) {
-      throw new Error('Not a GitHub URL');
-    }
+// async function parseGithubUrl(url: string) {
+//   try {
+//     const urlObj = new URL(url);
+//     if (!urlObj.hostname.includes('github.com')) {
+//       throw new Error('Not a GitHub URL');
+//     }
 
-    // Remove any trailing slashes and split the pathname
-    const parts = urlObj.pathname.replace(/^\/|\/$/g, '').split('/');
+//     // Remove any trailing slashes and split the pathname
+//     const parts = urlObj.pathname.replace(/^\/|\/$/g, '').split('/');
 
-    if (parts.length < 2) {
-      throw new Error('Invalid GitHub URL format: missing owner or repository');
-    }
+//     if (parts.length < 2) {
+//       throw new Error('Invalid GitHub URL format: missing owner or repository');
+//     }
 
-    const [owner, repo] = parts;
-    console.log('Parsed GitHub URL:', { owner, repo }); // Add logging
+//     const [owner, repo] = parts;
+//     console.log('Parsed GitHub URL:', { owner, repo }); // Add logging
 
-    // Fetch README content from GitHub API
-    const readmeUrl = `https://api.github.com/repos/${owner}/${repo}/readme`;
-    const response = await fetch(readmeUrl);
+//     // Fetch README content from GitHub API
+//     const readmeUrl = `https://api.github.com/repos/${owner}/${repo}/readme`;
+//     const response = await fetch(readmeUrl);
 
-    if (!response.ok) {
-      console.error(
-        'Failed to fetch README:',
-        response.status,
-        response.statusText
-      );
-      throw new Error('Failed to fetch README');
-    }
+//     if (!response.ok) {
+//       console.error(
+//         'Failed to fetch README:',
+//         response.status,
+//         response.statusText
+//       );
+//       throw new Error('Failed to fetch README');
+//     }
 
-    const data = await response.json();
-    const readmeContent = Buffer.from(data.content, 'base64').toString('utf-8');
+//     const data = await response.json();
+//     const readmeContent = Buffer.from(data.content, 'base64').toString('utf-8');
 
-    return { owner, repo, readmeContent };
-  } catch (error) {
-    console.error('GitHub URL parsing error:', error);
-    throw new Error('Invalid GitHub URL format');
-  }
-}
+//     return { owner, repo, readmeContent };
+//   } catch (error) {
+//     console.error('GitHub URL parsing error:', error);
+//     throw new Error('Invalid GitHub URL format');
+//   }
+// }
 
 export async function POST(request: Request) {
   try {
-    // Validate API key from header
     const authHeader = request.headers.get('authorization');
     if (!authHeader?.startsWith('Bearer ')) {
       return NextResponse.json(
@@ -54,37 +54,23 @@ export async function POST(request: Request) {
     }
     const token = authHeader.split(' ')[1];
 
-    // Add validation request debugging
-    console.log('GitHub Summarizer API key validation:', {
-      hasToken: !!token,
-      tokenLength: token?.length,
-      timestamp: new Date().toISOString(),
-      environment: process.env.NODE_ENV,
-    });
+    // Use server-side validation directly
+    const supabase = createClient(true);
 
-    // Validate the API key using the validate endpoint
-    const validateResponse = await fetch(
-      new URL('/api/api-keys/validate', request.url),
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ key: token }),
-      }
-    );
+    // Check if the API key exists and is valid
+    const { data: keyData, error: keyError } = await supabase
+      .from('api_keys')
+      .select('user_id') // Remove active field since it doesn't exist
+      .eq('key', token)
+      .single();
 
-    if (!validateResponse.ok) {
-      const errorData = await validateResponse.json();
+    if (keyError || !keyData) {
       console.error('API key validation failed:', {
-        status: validateResponse.status,
-        error: errorData,
+        error: keyError?.message || 'Invalid key',
         timestamp: new Date().toISOString(),
       });
-      return NextResponse.json(
-        { error: errorData.error || 'Invalid API key' },
-        { status: validateResponse.status }
-      );
+
+      return NextResponse.json({ error: 'Invalid API key' }, { status: 401 });
     }
 
     // Parse request body
@@ -100,82 +86,98 @@ export async function POST(request: Request) {
         );
       }
     } catch {
+      // Removed the unused parameter completely
       return NextResponse.json(
         { error: 'Invalid JSON format in request body' },
         { status: 400 }
       );
     }
 
-    // Parse GitHub URL and fetch data
-    let repoInfo;
+    // Parse GitHub URL and fetch repository data
     try {
-      repoInfo = await parseGithubUrl(githubUrl);
-    } catch (urlError: unknown) {
-      if (urlError instanceof Error) {
-        return NextResponse.json(
-          { error: 'Invalid GitHub URL', details: urlError.message },
-          { status: 400 }
+      const urlParts = new URL(githubUrl).pathname.split('/').filter(Boolean);
+      const [owner, repo] = urlParts;
+
+      if (!owner || !repo) {
+        throw new Error(
+          'Invalid GitHub URL format: missing owner or repository'
         );
       }
-      return NextResponse.json(
-        { error: 'Invalid GitHub URL' },
-        { status: 400 }
+
+      console.log('Fetching repository data:', { owner, repo });
+
+      // Fetch repository data
+      const repoResponse = await fetch(
+        `https://api.github.com/repos/${owner}/${repo}`,
+        {
+          headers: {
+            Accept: 'application/vnd.github.v3+json',
+            'User-Agent': 'SuperCur-App',
+          },
+        }
       );
-    }
 
-    // Fetch repository data
-    const response = await fetch(
-      `https://api.github.com/repos/${repoInfo.owner}/${repoInfo.repo}`,
-      {
-        headers: {
-          Accept: 'application/vnd.github.v3+json',
-          'User-Agent': 'SuperCur-App',
-        },
+      if (!repoResponse.ok) {
+        throw new Error(
+          `GitHub API error: ${repoResponse.status} ${repoResponse.statusText}`
+        );
       }
-    );
 
-    if (!response.ok) {
+      const repoData = await repoResponse.json();
+
+      // Fetch README content
+      const readmeResponse = await fetch(
+        `https://api.github.com/repos/${owner}/${repo}/readme`,
+        {
+          headers: {
+            Accept: 'application/vnd.github.v3.raw',
+            'User-Agent': 'SuperCur-App',
+          },
+        }
+      );
+
+      if (!readmeResponse.ok) {
+        throw new Error('Failed to fetch README');
+      }
+
+      // Generate summary using the chain
+      const summary = await chain({
+        name: repoData.full_name,
+        description: repoData.description || '',
+        stargazers_count: repoData.stargazers_count,
+        language: repoData.language || 'Not specified',
+        topics: repoData.topics || [],
+        updated_at: repoData.updated_at,
+        html_url: repoData.html_url,
+      });
+
+      return NextResponse.json(summary);
+    } catch (error) {
+      console.error('Error processing request:', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined,
+        timestamp: new Date().toISOString(),
+      });
+
       return NextResponse.json(
         {
-          error: 'Failed to fetch repository data',
-          details: `Status: ${response.status}, ${response.statusText}`,
+          error: 'Failed to process GitHub repository',
+          details: error instanceof Error ? error.message : 'Unknown error',
         },
-        { status: response.status }
+        { status: 500 }
       );
     }
-
-    const repoData = await response.json();
-
-    try {
-      const summary = await chain(repoData);
-      return NextResponse.json(summary);
-    } catch (chainError: Error | unknown) {
-      if (chainError instanceof Error) {
-        if (
-          chainError.message?.includes('rate limit') ||
-          chainError.message?.includes('quota')
-        ) {
-          return NextResponse.json(
-            {
-              error: 'Service temporarily unavailable',
-              message:
-                'We are experiencing high demand. Please try again in a few minutes.',
-            },
-            { status: 429 }
-          );
-        }
-      }
-      throw chainError;
-    }
   } catch (error) {
-    console.error('Server error:', error);
+    console.error('Top-level error:', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      timestamp: new Date().toISOString(),
+    });
+
     return NextResponse.json(
       {
         error: 'Internal server error',
-        message:
-          error instanceof Error
-            ? error.message
-            : 'An unexpected error occurred',
+        message: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 }
     );

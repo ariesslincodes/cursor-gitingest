@@ -13,6 +13,8 @@ export default withAuth(
         id: token?.id,
         email: token?.email,
         sub: token?.sub,
+        path: request.nextUrl.pathname,
+        timestamp: new Date().toISOString(),
       });
     });
 
@@ -20,7 +22,13 @@ export default withAuth(
   },
   {
     callbacks: {
-      authorized: ({ token }) => !!token,
+      authorized: ({ token }) => {
+        console.log('Authorization check:', {
+          hasToken: !!token,
+          timestamp: new Date().toISOString(),
+        });
+        return !!token;
+      },
     },
     pages: {
       signIn: '/',
@@ -31,9 +39,7 @@ export default withAuth(
 // Combined matcher configuration for all protected routes
 export const config = {
   matcher: [
-    '/api/api-keys/:function*',
-    '/api/validate-key',
-    '/api/github-summarizer',
+    '/api/api-keys/:path*',
     '/dashboards/:path*',
     '/playground/:path*',
     '/github-summarizer/:path*',
