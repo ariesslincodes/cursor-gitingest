@@ -12,15 +12,11 @@ async function checkAuth(req: NextRequest) {
   return token.sub;
 }
 
-type RouteContext = {
-  params: {
-    id: string;
-  };
-  searchParams: { [key: string]: string | string[] | undefined };
-};
-
 // PUT /api/api-keys/[id] - Update an API key
-export async function PUT(req: NextRequest, { params }: RouteContext) {
+export async function PUT(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
   const userId = await checkAuth(req);
   if (userId instanceof NextResponse) return userId;
 
@@ -48,7 +44,10 @@ export async function PUT(req: NextRequest, { params }: RouteContext) {
 }
 
 // DELETE /api/api-keys/[id] - Delete an API key
-export async function DELETE(req: NextRequest, { params }: RouteContext) {
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
   const userId = await checkAuth(req);
   if (userId instanceof NextResponse) return userId;
 
