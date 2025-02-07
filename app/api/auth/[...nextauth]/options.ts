@@ -2,6 +2,33 @@ import GoogleProvider from 'next-auth/providers/google';
 import { userService } from '@/app/services/user';
 import type { NextAuthOptions } from 'next-auth';
 
+// Extend the built-in session types
+declare module 'next-auth' {
+  interface Session {
+    user: {
+      id: string;
+      email: string;
+      name?: string | null;
+      image?: string | null;
+    };
+    accessToken?: string;
+  }
+  interface User {
+    id: string;
+    email: string;
+    name?: string | null;
+    image?: string | null;
+  }
+}
+
+// Extend JWT type
+declare module 'next-auth/jwt' {
+  interface JWT {
+    id: string;
+    accessToken?: string;
+  }
+}
+
 export const authOptions: NextAuthOptions = {
   providers: [
     GoogleProvider({
