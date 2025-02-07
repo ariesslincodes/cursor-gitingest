@@ -1,5 +1,4 @@
 import { ApiKey } from '@/types/api';
-import { getSession } from 'next-auth/react';
 
 export interface UpdateApiKeyData {
   name: string;
@@ -10,8 +9,6 @@ export type { ApiKey };
 
 export const apiKeyService = {
   async fetchApiKeys(): Promise<ApiKey[]> {
-    await getSession();
-
     try {
       const response = await fetch('/api/api-keys', {
         method: 'GET',
@@ -33,9 +30,6 @@ export const apiKeyService = {
   },
 
   async createApiKey(name: string): Promise<string> {
-    const session = await getSession();
-    if (!session) throw new Error('No active session');
-
     const response = await fetch('/api/api-keys', {
       method: 'POST',
       headers: {
@@ -53,9 +47,6 @@ export const apiKeyService = {
   },
 
   async updateApiKey(id: string, data: UpdateApiKeyData): Promise<void> {
-    const session = await getSession();
-    if (!session) throw new Error('No active session');
-
     const requestConfig = {
       method: 'PUT',
       headers: {
@@ -74,9 +65,6 @@ export const apiKeyService = {
   },
 
   async deleteApiKey(id: string): Promise<void> {
-    const session = await getSession();
-    if (!session) throw new Error('No active session');
-
     const requestConfig = {
       method: 'DELETE',
       headers: {
@@ -95,9 +83,6 @@ export const apiKeyService = {
   async validateApiKey(
     key: string
   ): Promise<{ isValid: boolean; userId?: string }> {
-    const session = await getSession();
-    if (!session) throw new Error('No active session');
-
     const response = await fetch('/api/api-keys/validate', {
       method: 'POST',
       headers: {

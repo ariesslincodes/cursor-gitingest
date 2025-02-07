@@ -1,4 +1,3 @@
-import { apiKeyService } from '@/app/services/apiKeys';
 import { chain } from '@/app/services/chain';
 import { NextResponse } from 'next/server';
 
@@ -54,13 +53,21 @@ export async function POST(request: Request) {
       );
     }
     const token = authHeader.split(' ')[1];
-    const isValidKey = await apiKeyService.validateApiKey(token);
 
-    if (!isValidKey) {
-      return NextResponse.json(
-        { error: 'Invalid or missing API key' },
-        { status: 401 }
-      );
+    // Validate the API key using the validate endpoint directly
+    const validateResponse = await fetch(
+      new URL('/api/api-keys/validate', request.url),
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ key: token }),
+      }
+    );
+
+    if (!validateResponse.ok) {
+      return NextResponse.json({ error: 'Invalid API key' }, { status: 401 });
     }
 
     // Parse request body

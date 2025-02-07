@@ -9,7 +9,7 @@ import { useSession } from 'next-auth/react';
 import { ROUTES } from '@/lib/constants';
 
 export default function PlaygroundPage() {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const [apiKey, setApiKey] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
@@ -28,8 +28,8 @@ export default function PlaygroundPage() {
   }
 
   // If user is not logged in, redirect to home
-  if (!session) {
-    router.push('/');
+  if (status === 'unauthenticated') {
+    router.push(ROUTES.LOGIN);
     return null;
   }
 
@@ -46,15 +46,17 @@ export default function PlaygroundPage() {
         body: JSON.stringify({ apiKey }),
       });
 
+      const data = await response.json();
+
       if (response.ok) {
-        showToast('Valid API key, /protected can be accessed', 'success');
+        showToast('API key validated successfully', 'success');
         router.push('/protected');
       } else {
-        showToast('Invalid API key', 'error');
+        showToast(data.error || 'Invalid API key', 'error');
       }
     } catch (err) {
       console.error('Error validating API key:', err);
-      showToast('Invalid API key', 'error');
+      showToast('Error validating API key', 'error');
     } finally {
       setIsLoading(false);
     }

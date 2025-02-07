@@ -1,55 +1,87 @@
-import { apiKeyService } from '@/app/services/apiKeys';
 import { NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '../auth/[...nextauth]/options';
+import { createClient } from '@/lib/supabase';
 
 export async function POST(request: Request) {
   try {
-    let apiKey: string;
+    const session = await getServerSession(authOptions);
 
-    // Check if it's a JSON request (from web) or API request (from Postman)
-    const contentType = request.headers.get('content-type');
-    if (contentType?.includes('application/json')) {
-      // Web request with JSON body
-      try {
-        const body = await request.json();
-        apiKey = body.apiKey;
-      } catch {
-        return NextResponse.json(
-          { error: 'Invalid JSON format in request body' },
-          { status: 400 }
-        );
-      }
-    } else {
-      // API request with Authorization header
-      const authHeader = request.headers.get('authorization');
-      if (!authHeader) {
-        return NextResponse.json(
-          { error: 'Missing Authorization header' },
-          { status: 401 }
-        );
-      }
-      apiKey = authHeader.replace('Bearer ', '');
+    // Add detailed session debugging
+    console.log('Session debug:', {
+      exists: !!session,
+      userId: session?.user?.id,
+      email: session?.user?.email,
+      status: session ? 'active' : 'missing',
+    });
+
+    if (!session?.user?.id) {
+      console.log('Authentication failed:', {
+        reason: !session ? 'No session' : 'No user ID in session',
+        sessionData: session
+          ? 'Session exists but incomplete'
+          : 'No session data',
+      });
+
+      return NextResponse.json(
+        { error: 'Unauthorized - No valid session found' },
+        { status: 401 }
+      );
     }
 
-    if (!apiKey) {
+    const { apiKey } = await request.json();
+    console.log('Received API key validation request:', {
+      userId: session.user.id,
+      keyLength: apiKey?.length,
+      hasKey: !!apiKey,
+    });
+
+    const supabase = createClient(true);
+
+    // Check if the API key exists and belongs to the user
+    const { data, error } = await supabase
+      .from('api_keys')
+      .select('user_id')
+      .eq('key', apiKey)
+      .single();
+
+    if (error) {
+      console.log('Supabase query error:', {
+        error: error.message,
+        code: error.code,
+        details: error.details,
+      });
+    }
+
+    if (error || !data) {
       return NextResponse.json(
-        { error: 'API key is required' },
+        { error: 'Invalid API key', details: error?.message },
         { status: 400 }
       );
     }
 
-    // Check if the API key exists in your database
-    const isValid = await apiKeyService.validateApiKey(apiKey);
+    console.log('API key validation successful:', {
+      foundUserId: data.user_id,
+      matchesSession: data.user_id === session.user.id,
+    });
 
-    if (isValid) {
-      return NextResponse.json({ valid: true });
-    } else {
-      return NextResponse.json({ error: 'Invalid API key' }, { status: 401 });
-    }
+    // Return validation result
+    return NextResponse.json({
+      isValid: true,
+      userId: data.user_id,
+    });
   } catch (error) {
-    // Only use 500 for actual server errors
-    console.error('Server error:', error);
+    console.error('Error validating API key:', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+      type: error instanceof Error ? error.constructor.name : typeof error,
+      stack: error instanceof Error ? error.stack : 'No stack trace',
+    });
+
     return NextResponse.json(
-      { error: 'Internal server error' },
+      {
+        error: 'Internal server error',
+        details: error instanceof Error ? error.message : 'Unknown error',
+      },
       { status: 500 }
     );
   }
